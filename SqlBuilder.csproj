@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{1D0B7F21-2930-4C6E-AA04-9B771D0DAD8F}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>SqlBuilder</RootNamespace>
+    <AssemblyName>SQLBuilder</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.Linq" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="JoinedTable.cs" />
+    <Compile Include="WhereCondition.cs" />
+    <Compile Include="QueryBuilder.cs" />
+    <Compile Include="WhereConditions\BetweenCondition.cs" />
+    <Compile Include="WhereConditions\NotEqualTo.cs" />
+    <Compile Include="WhereConditions\SimpleComparison.cs" />
+    <Compile Include="WhereConditions\EqualTo.cs" />
+    <Compile Include="WhereConditions\GreaterOrEqual.cs" />
+    <Compile Include="WhereConditions\GreaterThan.cs" />
+    <Compile Include="WhereConditions\LesserOrEqual.cs" />
+    <Compile Include="SqlFragments\SqlNode.cs" />
+    <Compile Include="SqlFragments\SqlFragment.cs" />
+    <Compile Include="SqlFragments\ProjectionFragment.cs" />
+    <Compile Include="SqlFragments\FromFragment.cs" />
+    <Compile Include="Types\IUserType.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Folder Include="WhereConditions\" />
+    <Folder Include="SqlFragments\" />
+    <Folder Include="Types\" />
+  </ItemGroup>
+</Project>
