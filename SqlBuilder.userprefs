@@ -1,10 +1,22 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workbench ActiveDocument="QueryBuilder.cs">
+    <Files>
+      <File FileName="TestProject/Main.cs" Line="39" Column="1" />
+      <File FileName="QueryBuilder.cs" Line="739" Column="8" />
+      <File FileName="ExpressionUtils/ExpressionTreeParser.cs" Line="12" Column="3" />
+      <File FileName="TestProject/EvDate.cs" Line="25" Column="4" />
+      <File FileName="TestProject/Event.cs" Line="23" Column="4" />
+      <File FileName="SqlFragments/ProjectionFragment.cs" Line="6" Column="2" />
+    </Files>
     <Pads>
       <Pad Id="ProjectPad">
-        <State expanded="True" selected="True">
-          <Node name="SqlBuilder" expanded="True" />
+        <State expanded="True">
+          <Node name="SqlBuilder" expanded="True">
+            <Node name="ExpressionUtils" expanded="True" />
+            <Node name="SqlFragments" expanded="True" />
+          </Node>
+          <Node name="TestProject" expanded="True" selected="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">

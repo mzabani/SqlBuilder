@@ -51,11 +51,15 @@
     <Compile Include="SqlFragments\ProjectionFragment.cs" />
     <Compile Include="SqlFragments\FromFragment.cs" />
     <Compile Include="Types\IUserType.cs" />
+    <Compile Include="SqlFragments\OrderByFragment.cs" />
+    <Compile Include="ExpressionUtils\ExpressionTreeParser.cs" />
+    <Compile Include="WhereConditions\InCondition.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Folder Include="WhereConditions\" />
     <Folder Include="SqlFragments\" />
     <Folder Include="Types\" />
+    <Folder Include="ExpressionUtils\" />
   </ItemGroup>
 </Project>
