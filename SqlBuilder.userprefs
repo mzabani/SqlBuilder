@@ -3,7 +3,7 @@
   <MonoDevelop.Ide.Workbench ActiveDocument="QueryBuilder.cs">
     <Files>
       <File FileName="TestProject/Main.cs" Line="39" Column="1" />
-      <File FileName="QueryBuilder.cs" Line="739" Column="8" />
+      <File FileName="QueryBuilder.cs" Line="723" Column="26" />
       <File FileName="ExpressionUtils/ExpressionTreeParser.cs" Line="12" Column="3" />
       <File FileName="TestProject/EvDate.cs" Line="25" Column="4" />
       <File FileName="TestProject/Event.cs" Line="23" Column="4" />

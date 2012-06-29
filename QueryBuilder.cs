@@ -685,7 +685,7 @@ namespace SqlBuilder
 
 		public List<T> List<T, C>(IDbConnection con, Expression<Func<T, IList<C>>> fetchManyExpr)
 			where T : class, new()
-			//where C : class, new()
+			where C : class, new()
 		{
 			// Get ready to create instances of T only when we hit a different hashcode, while
 			// we fetch every element whose columns are in the object type "referenced" by fetchManyExpr.
@@ -778,7 +778,7 @@ namespace SqlBuilder
 					C collectionElement = new C();
 					foreach (ProjectionFragment proj in selectedProjections)
 					{
-						SetValue setter;
+						SetValue setter = null;
 						
 						// GetName() should return the correct property or field name, no matter if it is an aliased expression or a column
 						string propertyName = proj.GetName();
@@ -826,7 +826,7 @@ namespace SqlBuilder
 								}
 								else
 								{
-									collectionElement = dr[ordinal];
+									collectionElement = (C) dr[ordinal];
 								}
 							}
 						}
