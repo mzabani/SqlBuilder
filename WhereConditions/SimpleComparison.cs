@@ -14,12 +14,26 @@ namespace SqlBuilder.Conditions
 			
 			this.SetSqlFragment(frag);
 		}
+
+		public SimpleComparison(SqlFragment leftSideColumnOrExpression, string @operator, SqlFragment rightSideColumnOrExpression) {
+			SqlFragment frag = new SqlFragment();
+			frag.AppendFragment(leftSideColumnOrExpression)
+				.AppendText(@operator)
+				.AppendFragment(rightSideColumnOrExpression);
+			
+			this.SetSqlFragment(frag);
+		}
 		
-		public SimpleComparison(string column, string @operator, object @value) : this(new SqlFragment(column), @operator, @value)
+		public SimpleComparison(string columnOrExpression, string @operator, object @value) : this(new SqlFragment(columnOrExpression), @operator, @value)
+		{
+		}
+
+		public SimpleComparison(string leftSideColumnOrExpression, string @operator, string rightSideColumnOrExpression) : this(new SqlFragment(leftSideColumnOrExpression), @operator, new SqlFragment(rightSideColumnOrExpression))
 		{
 		}
 	}
-	
+
+
 	public class SimpleComparison<T> : SimpleComparison
 	{
 		public SimpleComparison(Expression<Func<T, object>> lambdaGetter, string @operator, object @value)

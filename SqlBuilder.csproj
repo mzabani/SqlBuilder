@@ -45,7 +45,6 @@
     <Compile Include="WhereConditions\EqualTo.cs" />
     <Compile Include="WhereConditions\GreaterOrEqual.cs" />
     <Compile Include="WhereConditions\GreaterThan.cs" />
-    <Compile Include="WhereConditions\LesserOrEqual.cs" />
     <Compile Include="SqlFragments\SqlNode.cs" />
     <Compile Include="SqlFragments\SqlFragment.cs" />
     <Compile Include="SqlFragments\ProjectionFragment.cs" />
@@ -54,6 +53,12 @@
     <Compile Include="SqlFragments\OrderByFragment.cs" />
     <Compile Include="ExpressionUtils\ExpressionTreeParser.cs" />
     <Compile Include="WhereConditions\InCondition.cs" />
+    <Compile Include="WhereConditions\NotNullCondition.cs" />
+    <Compile Include="ReflectionHelper.cs" />
+    <Compile Include="MassUpdater.cs" />
+    <Compile Include="Updater.cs" />
+    <Compile Include="WhereConditions\LessThan.cs" />
+    <Compile Include="WhereConditions\LessOrEqual.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

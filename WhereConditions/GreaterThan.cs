@@ -7,6 +7,10 @@ namespace SqlBuilder.Conditions
 		public GreaterThan(string column, object @value) : base(column, ">", @value)
 		{
 		}
+
+		public GreaterThan(string leftSideColumnOrExpression, string rightSideColumnOrExpression) : base(leftSideColumnOrExpression, ">", rightSideColumnOrExpression)
+		{
+		}
 	}
 }
 

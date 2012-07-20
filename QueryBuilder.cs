@@ -5,71 +5,12 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
+using SqlBuilder.Reflection;
 
 namespace SqlBuilder
 {	
-	public class QueryBuilder<CommType>
-			where CommType : IDbCommand, new()
-	{
+	public class QueryBuilder {
 		private FromFragment tableOrSubquery;
-		
-		#region Internal Reflection Helper Methods
-		private delegate void SetValue(Object obj, Object val);
-		private delegate void PropSetValue(Object obj, Object val, Object[] index);
-		private delegate object InvokeSetter(Object obj, Object[] parameters);
-		private SetValue PropValueSetterDelegate(PropSetValue propSetter) {
-			SetValue setValueFunc = (obj, val) => 
-				{
-					propSetter(obj, val, null);
-				};
-			
-			return setValueFunc;
-		}
-		
-		private static IDictionary<Type, IDictionary<string, SetValue>> propSetters = new Dictionary<Type, IDictionary<string, SetValue>>(1);
-		
-		/// <summary>
-		/// Get the field and public property setters of type T and put them the cache, if not already there.
-		/// </summary>
-		private IDictionary<string, SetValue> FetchSettersOf<T>() {
-			Type typeOfT = typeof(T);
-			IDictionary<string, SetValue> setters;
-			if (propSetters.ContainsKey(typeOfT))
-			{
-				setters = propSetters[typeOfT];
-			}
-			else
-			{
-				setters = new Dictionary<string, SetValue>(1);
-				propSetters.Add(typeOfT, setters);
-				var fields = typeOfT.GetFields();
-				var props = typeOfT.GetProperties();
-				
-				foreach (var field in fields)
-				{
-					//Console.WriteLine("Found field {0}", field.Name);
-					setters.Add(field.Name, field.SetValue);
-				}
-				
-				foreach (var prop in props)
-				{
-					MethodInfo publicSetter = prop.GetSetMethod();
-					if (publicSetter != null)
-					{
-						//Console.WriteLine("Found property {0} with public setter.", prop.Name);
-						setters.Add(prop.Name, PropValueSetterDelegate(prop.SetValue));
-					}
-					else
-					{
-						//Console.WriteLine("Property {0} found bot not included (no public setter).", prop.Name);
-					}						
-				}
-			}
-			
-			return setters;
-		}
-		#endregion
 		
 		#region Adding columns and expressions to the SELECT clause
 		private IList<ProjectionFragment> selectedProjections;
@@ -80,7 +21,7 @@ namespace SqlBuilder
 		/// <param name='columns'>
 		/// One ore more comma separated columns.
 		/// </param>
-		public QueryBuilder<CommType> AddSelectColumn(string columns) {
+		public QueryBuilder AddSelectColumn(string columns) {
 			// If we detect an " AS " substring, the variables below will be helpful
 			string[] aliasSeparator = new string[1] { " AS " };
 			string[] splitParts = new string[2];
@@ -103,7 +44,7 @@ namespace SqlBuilder
 			return this;
 		}
 		
-		public QueryBuilder<CommType> AddSelectColumn(ProjectionFragment selectFrag) {
+		public QueryBuilder AddSelectColumn(ProjectionFragment selectFrag) {
 			selectedProjections.Add(selectFrag);
 			
 			return this;
@@ -117,8 +58,8 @@ namespace SqlBuilder
 		/// <typeparam name='T'>
 		/// The type whose properties are to be aliased and fetched.
 		/// </typeparam>
-		public QueryBuilder<CommType> RetrieveColumnsOf<T>() {			
-			IDictionary<string, SetValue> setters = FetchSettersOf<T>();
+		public QueryBuilder RetrieveColumnsOf<T>() {			
+			IDictionary<string, SetValue> setters = ReflectionHelper.FetchSettersOf<T>();
 			
 			IList<ProjectionFragment> newSelects = new List<ProjectionFragment>();
 			foreach (ProjectionFragment proj in selectedProjections)
@@ -171,9 +112,9 @@ namespace SqlBuilder
 		/// <typeparam name='T'>
 		/// The class with the properties to be selected.
 		/// </typeparam>
-		public QueryBuilder<CommType> AddColumnsOf<T>(string table_alias, IEnumerable<Expression<Func<T, object>>> getterExprs) {
+		public QueryBuilder AddColumnsOf<T>(string table_alias, IEnumerable<Expression<Func<T, object>>> getterExprs) {
 			// 1. Cache all setters for type T.
-			IDictionary<string, SetValue> setters = FetchSettersOf<T>();
+			IDictionary<string, SetValue> setters = ReflectionHelper.FetchSettersOf<T>();
 			
 			// 2. Add "table_alias"."propOrFieldName" to the select list or just "propOrFieldName" if table_alias is null for every
 			//    field and property returned in getterExprs
@@ -206,7 +147,7 @@ namespace SqlBuilder
 		/// <typeparam name='T'>
 		/// The class with the properties to be selected.
 		/// </typeparam>
-		public QueryBuilder<CommType> AddColumnsOf<T>(string table_alias, params Expression<Func<T, object>>[] getterExprs) {
+		public QueryBuilder AddColumnsOf<T>(string table_alias, params Expression<Func<T, object>>[] getterExprs) {
 			return AddColumnsOf<T>(table_alias, getterExprs);
 		}
 
@@ -220,7 +161,7 @@ namespace SqlBuilder
 		/// <typeparam name='T'>
 		/// The class with the properties to be selected.
 		/// </typeparam>
-		public QueryBuilder<CommType> AddColumnsOf<T>(IEnumerable<Expression<Func<T, object>>> getterExprs) {
+		public QueryBuilder AddColumnsOf<T>(IEnumerable<Expression<Func<T, object>>> getterExprs) {
 			return AddColumnsOf<T>(null, getterExprs);
 		}
 
@@ -234,7 +175,7 @@ namespace SqlBuilder
 		/// <typeparam name='T'>
 		/// The class with the properties to be selected.
 		/// </typeparam>
-		public QueryBuilder<CommType> AddColumnsOf<T>(params Expression<Func<T, object>>[] getterExprs) {
+		public QueryBuilder AddColumnsOf<T>(params Expression<Func<T, object>>[] getterExprs) {
 			return AddColumnsOf<T>(null, getterExprs);
 		}
 
@@ -248,9 +189,9 @@ namespace SqlBuilder
 		/// <typeparam name='T'>
 		/// The class with the properties to be selected.
 		/// </typeparam>
-		public QueryBuilder<CommType> AddColumnsOf<T>() {
+		public QueryBuilder AddColumnsOf<T>() {
 			// 1. Go after all the public settable properties and public fields in type T
-			IDictionary<string, SetValue> setters = FetchSettersOf<T>();
+			IDictionary<string, SetValue> setters = ReflectionHelper.FetchSettersOf<T>();
 			
 			// 2. Add all of them to the select list!
 			foreach (string propOrField in setters.Select(x => x.Key))
@@ -261,7 +202,7 @@ namespace SqlBuilder
 			return this;
 		}
 		
-		public QueryBuilder<CommType> ResetSelects() {
+		public QueryBuilder ResetSelects() {
 			this.selectedProjections = new List<ProjectionFragment>();
 			
 			return this;
@@ -271,7 +212,7 @@ namespace SqlBuilder
 		#region Defining joins
 		private IList<JoinedTable> joinedTables;
 		
-		public QueryBuilder<CommType> AddJoin(string table, string column1, string column2, JoinType joinType)
+		public QueryBuilder AddJoin(string table, string column1, string column2, JoinType joinType)
 		{
 			JoinedTable join = new JoinedTable(table, column1, column2, joinType);
 			
@@ -293,7 +234,7 @@ namespace SqlBuilder
 		/// <param name='columns'>
 		/// One ore more comma separated columns.
 		/// </param>
-		public QueryBuilder<CommType> AddGroupedColumn(string columns) {
+		public QueryBuilder AddGroupedColumn(string columns) {
 			// If we detect an " AS " substring, the variables below will be helpful
 			string[] aliasSeparator = new string[1] { " AS " };
 			string[] splitParts = new string[2];
@@ -315,12 +256,12 @@ namespace SqlBuilder
 			
 			return this;
 		}
-		public QueryBuilder<CommType> AddGroupedColumn(SqlFragment frag) {
+		public QueryBuilder AddGroupedColumn(SqlFragment frag) {
 			groupedColumns.Add(frag);
 			
 			return this;
 		}
-		public QueryBuilder<CommType> ResetGroups() {
+		public QueryBuilder ResetGroups() {
 			groupedColumns = new List<SqlFragment>();
 			
 			return this;
@@ -330,12 +271,12 @@ namespace SqlBuilder
 		#region Defining WHERE conditions
 		private WhereCondition whereCondition;
 		
-		public QueryBuilder<CommType> SetWhereCondition(WhereCondition whereCondition) {
+		public QueryBuilder SetWhereCondition(WhereCondition whereCondition) {
 			this.whereCondition = whereCondition;
 			
 			return this;
 		}
-		public QueryBuilder<CommType> AndWhereCondition(WhereCondition andCondition) {
+		public QueryBuilder AndWhereCondition(WhereCondition andCondition) {
 			if (whereCondition == null)
 				return SetWhereCondition(andCondition);
 			
@@ -343,7 +284,7 @@ namespace SqlBuilder
 			
 			return this;
 		}
-		public QueryBuilder<CommType> OrWhereCondition(WhereCondition orCondition) {
+		public QueryBuilder OrWhereCondition(WhereCondition orCondition) {
 			if (whereCondition == null)
 				return SetWhereCondition(orCondition);
 			
@@ -362,18 +303,18 @@ namespace SqlBuilder
 		/// <param name='columns'>
 		/// One ore more comma separated columns.
 		/// </param>
-		public QueryBuilder<CommType> AddOrderByColumn(string columns) {
+		public QueryBuilder AddOrderByColumn(string columns) {
 			foreach (string col in columns.Split(','))
 				orderByColumns.Add(new SqlFragment(col.Trim()));
 			
 			return this;
 		}
-		public QueryBuilder<CommType> AddOrderByColumn(SqlFragment frag) {
+		public QueryBuilder AddOrderByColumn(SqlFragment frag) {
 			orderByColumns.Add(frag);
 			
 			return this;
 		}
-		public QueryBuilder<CommType> ResetOrderBy() {
+		public QueryBuilder ResetOrderBy() {
 			orderByColumns = new List<SqlFragment>();
 			
 			return this;
@@ -384,12 +325,12 @@ namespace SqlBuilder
 		private int offset;
 		private int limit;
 		
-		public QueryBuilder<CommType> Skip(int amount) {
+		public QueryBuilder Skip(int amount) {
 			offset = amount;
 			
 			return this;
 		}
-		public QueryBuilder<CommType> Take(int amount) {
+		public QueryBuilder Take(int amount) {
 			limit = amount;
 			
 			return this;
@@ -600,8 +541,7 @@ namespace SqlBuilder
 			IDictionary<string, object> parameters = new Dictionary<string, object>(10);
 			string command = this.ToSqlString(parameters);
 			
-			IDbCommand com = new CommType();
-			com.Connection = con;
+			IDbCommand com = con.CreateCommand();
 			com.CommandText = command;
 			
 			// Add the query's parameters
@@ -620,80 +560,85 @@ namespace SqlBuilder
 		#region Returning the results
 		public List<T> List<T>(IDbConnection con) where T : new() {
 			// Get the fields and properties of type T and put their setter methods in the cache, if not already there
-			IDictionary<string, SetValue> setters = FetchSettersOf<T>();
+			IDictionary<string, SetValue> setters = ReflectionHelper.FetchSettersOf<T>();
 			
 			// Execute the SQL command and create the list
 			List<T> results = new List<T>(10);
-			IDbCommand com = this.ToSqlCommand(con);
-			
-			using (IDataReader dr = com.ExecuteReader())
+			using (IDbCommand com = this.ToSqlCommand(con))
 			{
-				while (dr.Read())
+			
+				using (IDataReader dr = com.ExecuteReader())
 				{
-					T temp = new T();
-					
-					// Get the setters in the same order of the columns in selectColumns to set the fields/properties accordingly
-					int i = 0;
-					foreach (ProjectionFragment proj in selectedProjections)
+					while (dr.Read())
 					{
-						SetValue setter;
+						T temp = new T();
 						
-						// GetName() should return the correct property name, no matter if it is an aliased expression or a column
-						string propertyName = proj.GetName();
-						
-						try
+						// Get the setters in the same order of the columns in selectColumns to set the fields/properties accordingly
+						int i = 0;
+						foreach (ProjectionFragment proj in selectedProjections)
 						{
-							setter = setters[propertyName];
-						}
-						catch (KeyNotFoundException)
-						{
-							//Console.WriteLine("Property named {0} not defined in {1}", propertyName, typeof(T).ToString());
-							continue;
-						}
-						catch (IndexOutOfRangeException)
-						{
-							throw new Exception("No field or property in the result type named " + propertyName + " exists.");
-						}
-						
-						try
-						{
-							// Check for nulls
-							//Console.WriteLine("SETTING value of {0} to {1}", propertyName, dr[i]);
-							if (dr.IsDBNull(i))
+							SetValue setter;
+							
+							// GetName() should return the correct property name, no matter if it is an aliased expression or a column
+							string propertyName = proj.GetName();
+							
+							try
 							{
-								setter(temp, null);
+								setter = setters[propertyName];
 							}
-							else
+							catch (KeyNotFoundException)
 							{
-								setter(temp, dr[i]);
+								//Console.WriteLine("Property named {0} not defined in {1}", propertyName, typeof(T).ToString());
+								continue;
+							}
+							catch (IndexOutOfRangeException)
+							{
+								throw new Exception("No field or property in the result type named " + propertyName + " exists.");
 							}
 							
-							i++;
+							try
+							{
+								// Check for nulls
+								//Console.WriteLine("SETTING value of {0} to {1}", propertyName, dr[i]);
+								if (dr.IsDBNull(i))
+								{
+									setter(temp, null);
+								}
+								else
+								{
+									setter(temp, dr[i]);
+								}
+								
+								i++;
+							}
+							catch (IndexOutOfRangeException)
+							{
+								throw new Exception("One of the selected columns does not exist in the database. Maybe there is a typo in the selected columns?");
+							}
 						}
-						catch (IndexOutOfRangeException)
-						{
-							throw new Exception("One of the selected columns does not exist in the database. Maybe there is a typo in the selected columns?");
-						}
+						
+						results.Add(temp);
 					}
-					
-					results.Add(temp);
 				}
 			}
-			
+
 			return results;
 		}
 
 		public List<T> List<T, C>(IDbConnection con, Expression<Func<T, IList<C>>> fetchManyExpr)
 			where T : class, new()
-			where C : class, new()
+			where C : new()
 		{
 			// Get ready to create instances of T only when we hit a different hashcode, while
 			// we fetch every element whose columns are in the object type "referenced" by fetchManyExpr.
 			// Before that, cache the setters of this object type
 			string collectionPropOrFieldName = ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr<T, C>(fetchManyExpr);
-			PropertyInfo collectionProp = typeof(T).GetProperty(collectionPropOrFieldName, BindingFlags.Public);
-			FieldInfo collectionField = typeof(T).GetField(collectionPropOrFieldName);
-			if ((collectionProp == null || collectionProp.CanWrite == false) && collectionField == null)
+
+			// Get the fields and properties of type T and put their setter methods in the cache, if not already there
+			IDictionary<string, SetValue> setters = ReflectionHelper.FetchSettersOf<T>();
+			//PropertyInfo collectionProp = typeof(T).GetProperty(collectionPropOrFieldName, BindingFlags.Public);
+			//FieldInfo collectionField = typeof(T).GetField(collectionPropOrFieldName);
+			if (setters.ContainsKey(collectionPropOrFieldName) == false)
 			{
 				throw new Exception("Can't set the value of " + collectionPropOrFieldName + ". Make sure it is either a public field or a property with a public setter");
 			}
@@ -702,142 +647,158 @@ namespace SqlBuilder
 			IDictionary<string, SetValue> collectionMembersSetters = null;
 			if (typeof(C).IsClass)
 			{
-				collectionMembersSetters = FetchSettersOf<C>();
+				collectionMembersSetters = ReflectionHelper.FetchSettersOf<C>();
 			}
-
-			// Get the fields and properties of type T and put their setter methods in the cache, if not already there
-			IDictionary<string, SetValue> setters = FetchSettersOf<T>();
 			
 			// Execute the SQL command and create the list
 			List<T> results = new List<T>(10);
-			IDbCommand com = this.ToSqlCommand(con);
 
-			using (IDataReader dr = com.ExecuteReader())
+			using (IDbCommand com = this.ToSqlCommand(con))
 			{
-				List<C> collection = null;
-				int? lastHashCode = null;
-				while (dr.Read())
+				using (IDataReader dr = com.ExecuteReader())
 				{
-					T temp = new T();
-
-					// Set the fields/properties of the root object accordingly
-					foreach (ProjectionFragment proj in selectedProjections)
+					List<C> collection = null;
+					int? lastHashCode = null;
+					while (dr.Read())
 					{
-						SetValue setter;
-						
-						// GetName() should return the correct property or field name, no matter if it is an aliased expression or a column
-						string propertyName = proj.GetName();
-						
-						try
-						{
-							setter = setters[propertyName];
-						}
-						catch (KeyNotFoundException)
-						{
-							//Console.WriteLine("Property named {0} not defined in {1}", propertyName, typeof(T).ToString());
-							continue;
-						}
-						catch (IndexOutOfRangeException)
-						{
-							throw new Exception("No field or property in the result type named " + propertyName + " exists.");
-						}
-						
-						try
-						{
-							// Check for nulls
-							int ordinal = dr.GetOrdinal(propertyName);
-							//Console.WriteLine("SETTING value of {0} to {1}", propertyName, dr[ordinal]);
+						T temp = new T();
 
-							if (dr.IsDBNull(ordinal))
+						// Set the fields/properties of the root object accordingly
+						foreach (ProjectionFragment proj in selectedProjections)
+						{
+							SetValue setter;
+							
+							// GetName() should return the correct property or field name, no matter if it is an aliased expression or a column
+							string propertyName = proj.GetName();
+
+							// We shouldn't do anything if this is the collection property/field
+							if (propertyName == collectionPropOrFieldName)
+								continue;
+							
+							try
 							{
-								setter(temp, null);
+								setter = setters[propertyName];
 							}
-							else
+							catch (KeyNotFoundException)
 							{
-								setter(temp, dr[ordinal]);
+								//Console.WriteLine("Property named {0} not defined in {1}", propertyName, typeof(T).ToString());
+								continue;
 							}
-						}
-						catch (IndexOutOfRangeException)
-						{
-							throw new Exception("One of the selected columns does not exist in the database. Maybe there is a typo in the selected columns?");
-						}
-					}
-
-					// After building temp, check if GetHashCode has changed, in which case we create
-					// a new List<C> to this new object, adding it to the results (we don't add it to results otherwise).
-					// Whether the list is new or not, we add one object of type C to this lastTempRef
-					if (temp.GetHashCode() != lastHashCode)
-					{
-						results.Add(temp);
-						lastHashCode = temp.GetHashCode();
-
-						collection = new List<C>();
-						setters[collectionPropOrFieldName](temp, collection);
-					}
-
-					C collectionElement = new C();
-					foreach (ProjectionFragment proj in selectedProjections)
-					{
-						SetValue setter = null;
-						
-						// GetName() should return the correct property or field name, no matter if it is an aliased expression or a column
-						string propertyName = proj.GetName();
-						
-						try
-						{
-							if (collectionMembersSetters != null)
+							catch (IndexOutOfRangeException)
 							{
-								setter = collectionMembersSetters[propertyName];
+								throw new Exception("No field or property in the result type named " + propertyName + " exists.");
 							}
-						}
-						catch (KeyNotFoundException)
-						{
-							//Console.WriteLine("Property named {0} not defined in {1}", propertyName, typeof(C).ToString());
-							continue;
-						}
-						catch (IndexOutOfRangeException)
-						{
-							throw new Exception("No field or property in the collection type named " + propertyName + " exists.");
-						}
-						
-						try
-						{
-							// Check for nulls.
-							// Beware of C being a value type, in which case collectionMembersSetters == null.
-							int ordinal = dr.GetOrdinal(propertyName);
-							//Console.WriteLine("SETTING value of {0} to {1}", propertyName, dr[ordinal]);
-
-							if (dr.IsDBNull(ordinal))
+							
+							try
 							{
-								if (collectionMembersSetters != null)
+								// Check for nulls
+								int ordinal = dr.GetOrdinal(propertyName);
+								//Console.WriteLine("SETTING value of {0} to {1} to form basic object", propertyName, dr[ordinal]);
+
+								if (dr.IsDBNull(ordinal))
 								{
-									setter(collectionElement, null);
+									setter(temp, null);
 								}
 								else
 								{
-									collectionElement = default(C);
+									setter(temp, dr[ordinal]);
 								}
 							}
-							else
+							catch (IndexOutOfRangeException)
+							{
+								throw new Exception("One of the selected columns does not exist in the database. Maybe there is a typo in the selected columns?");
+							}
+						}
+
+						// After building temp, check if GetHashCode has changed, in which case we create
+						// a new List<C> to this new object, adding it to the results (we don't add it to results otherwise).
+						// Whether the list is new or not, we add one object of type C to this lastTempRef
+						if (temp.GetHashCode() != lastHashCode)
+						{
+							results.Add(temp);
+							lastHashCode = temp.GetHashCode();
+
+							collection = new List<C>();
+							setters[collectionPropOrFieldName](temp, collection);
+						}
+
+						C collectionElement = new C();
+						bool add_collectionElement = false;
+						foreach (ProjectionFragment proj in selectedProjections)
+						{
+							SetValue setter = null;
+							
+							// GetName() should return the correct property or field name, no matter if it is an aliased expression or a column
+							string propertyName = proj.GetName();
+
+							// Don't re-set values in case they have already been set
+							if (setters.ContainsKey(propertyName) == true)
+							{
+								if (collectionMembersSetters != null)
+									continue;
+								else if (propertyName != collectionPropOrFieldName)
+									continue;
+							}
+
+							try
 							{
 								if (collectionMembersSetters != null)
 								{
-									setter(collectionElement, dr[ordinal]);
+									setter = collectionMembersSetters[propertyName];
+								}
+							}
+							catch (KeyNotFoundException)
+							{
+								//Console.WriteLine("Property named {0} not defined in {1}", propertyName, typeof(C).ToString());
+								continue;
+							}
+							catch (IndexOutOfRangeException)
+							{
+								throw new Exception("No field or property in the collection type named " + propertyName + " exists.");
+							}
+							
+							try
+							{
+								// Check for nulls.
+								// Beware of C being a value type, in which case collectionMembersSetters == null.
+								int ordinal = dr.GetOrdinal(propertyName);
+
+								if (dr.IsDBNull(ordinal))
+								{
+									if (collectionMembersSetters != null)
+									{
+										setter(collectionElement, null);
+										add_collectionElement = true;
+									}
+									else if (collectionPropOrFieldName == propertyName)
+									{
+										//add_collectionElement = false;
+									}
 								}
 								else
 								{
-									collectionElement = (C) dr[ordinal];
+									if (collectionMembersSetters != null)
+									{
+										setter(collectionElement, dr[ordinal]);
+										add_collectionElement = true;
+									}
+									else if (collectionPropOrFieldName == propertyName)
+									{
+										collectionElement = (C) dr[ordinal];
+										add_collectionElement = true;
+									}
 								}
 							}
+							catch (IndexOutOfRangeException)
+							{
+								throw new Exception("One of the selected columns does not exist in the database. Maybe there is a typo in the selected columns?");
+							}
 						}
-						catch (IndexOutOfRangeException)
-						{
-							throw new Exception("One of the selected columns does not exist in the database. Maybe there is a typo in the selected columns?");
-						}
-					}
 
-					// Add this element to the collection
-					collection.Add(collectionElement);
+						// Add this element to the collection (or not)
+						if (add_collectionElement == true)
+							collection.Add(collectionElement);
+					}
 				}
 			}
 			
