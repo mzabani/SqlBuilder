@@ -3,7 +3,7 @@
   <MonoDevelop.Ide.Workbench ActiveDocument="QueryBuilder.cs">
     <Files>
       <File FileName="TestProject/Main.cs" Line="12" Column="15" />
-      <File FileName="QueryBuilder.cs" Line="127" Column="5" />
+      <File FileName="QueryBuilder.cs" Line="15" Column="3" />
       <File FileName="TestProject/PlaceEditionAndVoters.cs" Line="5" Column="2" />
     </Files>
     <Pads>

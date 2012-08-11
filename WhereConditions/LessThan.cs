@@ -8,6 +8,10 @@ namespace SqlBuilder.Conditions
 		{
 		}
 
+		public LessThan(SqlFragment leftSideFragment, object @value) : base(leftSideFragment, "<", @value)
+		{
+		}
+
 		public LessThan(string leftSideColumnOrExpression, string rightSideColumnOrExpression) : base(leftSideColumnOrExpression, "<", rightSideColumnOrExpression)
 		{
 		}
