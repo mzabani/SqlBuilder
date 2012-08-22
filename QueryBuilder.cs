@@ -5,7 +5,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System.Linq.Expressions;
+
 using SqlBuilder.Reflection;
+using SqlBuilder.Types;
 
 namespace SqlBuilder
 {	
@@ -21,7 +23,7 @@ namespace SqlBuilder
 		/// <param name='columns'>
 		/// One ore more comma separated columns.
 		/// </param>
-		public QueryBuilder AddSelectColumn(string columns) {
+		public QueryBuilder Select(string columns) {
 			// If we detect an " AS " substring, the variables below will be helpful
 			string[] aliasSeparator = new string[1] { " AS " };
 			string[] splitParts = new string[2];
@@ -44,7 +46,7 @@ namespace SqlBuilder
 			return this;
 		}
 		
-		public QueryBuilder AddSelectColumn(ProjectionFragment selectFrag) {
+		public QueryBuilder Select(ProjectionFragment selectFrag) {
 			selectedProjections.Add(selectFrag);
 			
 			return this;
@@ -58,7 +60,7 @@ namespace SqlBuilder
 		/// <typeparam name='T'>
 		/// The type whose properties are to be aliased and fetched.
 		/// </typeparam>
-		public QueryBuilder RetrieveColumnsOf<T>() {			
+		public QueryBuilder RemoveSelectionsNotOf<T>() {			
 			IDictionary<string, SetValue> setters = ReflectionHelper.FetchSettersOf<T>();
 			
 			IList<ProjectionFragment> newSelects = new List<ProjectionFragment>();
@@ -100,8 +102,7 @@ namespace SqlBuilder
 		}
 		
 		/// <summary>
-		/// Adds every publicly-settable field or property to the select list,
-		/// removing any beginning underscore from the name of the selected column.
+		/// Adds every publicly-settable field or property to the select list, removing any beginning underscore from the name of the selected column.
 		/// </summary>
 		/// <returns>
 		/// This QueryBuilder object.
@@ -125,9 +126,13 @@ namespace SqlBuilder
 				// Only if there is a public setter for this property or if the field is public
 				if (setters.ContainsKey(propOrFieldName) == false)
 					continue;
-				
+
+				// Remove a possible underscore before adding it to selection
+				if (propOrFieldName[0] == '_')
+					propOrFieldName = propOrFieldName.Substring(1);
+
 				string select_projection = String.IsNullOrWhiteSpace(table_alias) ? propOrFieldName : table_alias + "." + propOrFieldName;
-				AddSelectColumn(select_projection);
+				Select(select_projection);
 			}
 			
 			
@@ -135,8 +140,7 @@ namespace SqlBuilder
 		}
 
 		/// <summary>
-		/// Adds every publicly-settable field or property in <paramref name="getterExprs"/> to the select list,
-		/// removing any leading underscore from the name of the selected column.
+		/// Adds every publicly-settable field or property in <paramref name="getterExprs"/> to the select list, removing any leading underscore from the name of the selected column.
 		/// </summary>
 		/// <returns>
 		/// This QueryBuilder object.
@@ -148,12 +152,11 @@ namespace SqlBuilder
 		/// The class with the properties to be selected.
 		/// </typeparam>
 		public QueryBuilder AddColumnsOf<T>(string table_alias, params Expression<Func<T, object>>[] getterExprs) {
-			return AddColumnsOf<T>(table_alias, getterExprs);
+			return AddColumnsOf<T>(table_alias, getterExprs.AsEnumerable());
 		}
 
 		/// <summary>
-		/// Adds every publicly-settable field or property in <paramref name="getterExprs"/> to the select list,
-		/// removing any leading underscore from the name of the selected column.
+		/// Adds every publicly-settable field or property in <paramref name="getterExprs"/> to the select list, removing any leading underscore from the name of the selected column.
 		/// </summary>
 		/// <returns>
 		/// This QueryBuilder object.
@@ -166,8 +169,7 @@ namespace SqlBuilder
 		}
 
 		/// <summary>
-		/// Adds every publicly-settable field or property in <paramref name="getterExprs"/> to the select list,
-		/// removing any leading underscore from the name of the selected column.
+		/// Adds every publicly-settable field or property in <paramref name="getterExprs"/> to the select list, removing any leading underscore from the name of the selected column.
 		/// </summary>
 		/// <returns>
 		/// This QueryBuilder object.
@@ -176,12 +178,11 @@ namespace SqlBuilder
 		/// The class with the properties to be selected.
 		/// </typeparam>
 		public QueryBuilder AddColumnsOf<T>(params Expression<Func<T, object>>[] getterExprs) {
-			return AddColumnsOf<T>(null, getterExprs);
+			return AddColumnsOf<T>(null, getterExprs.AsEnumerable());
 		}
 
 		/// <summary>
-		/// Adds every publicly-settable field or property in type <typeref name="T"/> to the select list,
-		/// removing any leading underscore from the name of the selected column.
+		/// Adds every publicly-settable field or property in type <typeref name="T"/> to the select list, removing any leading underscore from the name of the selected column.
 		/// </summary>
 		/// <returns>
 		/// This QueryBuilder object.
@@ -196,7 +197,11 @@ namespace SqlBuilder
 			// 2. Add all of them to the select list!
 			foreach (string propOrField in setters.Select(x => x.Key))
 			{
-				AddSelectColumn(propOrField);
+				string selectableName = propOrField;
+				if (selectableName[0] == '_')
+					selectableName = propOrField.Substring(1);
+
+				Select(selectableName);
 			}
 			
 			return this;
@@ -212,7 +217,7 @@ namespace SqlBuilder
 		#region Defining joins
 		private IList<JoinedTable> joinedTables;
 		
-		public QueryBuilder AddJoin(string table, string column1, string column2, JoinType joinType)
+		public QueryBuilder Join(string table, string column1, string column2, JoinType joinType)
 		{
 			JoinedTable join = new JoinedTable(table, column1, column2, joinType);
 			
@@ -234,7 +239,7 @@ namespace SqlBuilder
 		/// <param name='columns'>
 		/// One ore more comma separated columns.
 		/// </param>
-		public QueryBuilder AddGroupedColumn(string columns) {
+		public QueryBuilder GroupBy(string columns) {
 			// If we detect an " AS " substring, the variables below will be helpful
 			string[] aliasSeparator = new string[1] { " AS " };
 			string[] splitParts = new string[2];
@@ -256,7 +261,7 @@ namespace SqlBuilder
 			
 			return this;
 		}
-		public QueryBuilder AddGroupedColumn(SqlFragment frag) {
+		public QueryBuilder GroupBy(SqlFragment frag) {
 			groupedColumns.Add(frag);
 			
 			return this;
@@ -270,27 +275,43 @@ namespace SqlBuilder
 		
 		#region Defining WHERE conditions
 		private WhereCondition whereCondition;
-		
-		public QueryBuilder SetWhereCondition(WhereCondition whereCondition) {
-			this.whereCondition = whereCondition;
+
+		/// <summary>
+		/// AND's the specified <paramref name="andCondition"/> to the QueryBuilder.
+		/// </summary>
+		/// <param name='andCondition'>
+		/// The condition to be ANDed.
+		/// </param>
+		public QueryBuilder Where(SqlFragment andCondition) {
+			if (whereCondition == null)
+			{
+				whereCondition = new WhereCondition(andCondition);
+			}
+			else
+			{
+				whereCondition.And(andCondition);
+			}
 			
 			return this;
 		}
-		public QueryBuilder AndWhereCondition(WhereCondition andCondition) {
+
+		/// <summary>
+		/// OR's the specified <paramref name="orCondition"/> to the QueryBuilder.
+		/// </summary>
+		/// <param name='orCondition'>
+		/// The condition to be ORed.
+		/// </param>
+		public QueryBuilder Or(SqlFragment orCondition) {
 			if (whereCondition == null)
-				return SetWhereCondition(andCondition);
-			
-			whereCondition = whereCondition.And(andCondition);
-			
-			return this;
-		}
-		public QueryBuilder OrWhereCondition(WhereCondition orCondition) {
-			if (whereCondition == null)
-				return SetWhereCondition(orCondition);
-			
-			whereCondition = whereCondition.Or(orCondition);
-			
-			return this;
+			{
+				return Where(orCondition);
+			}
+			else
+			{
+				whereCondition.Or(orCondition);
+				
+				return this;
+			}
 		}
 		#endregion
 		
@@ -303,13 +324,13 @@ namespace SqlBuilder
 		/// <param name='columns'>
 		/// One ore more comma separated columns.
 		/// </param>
-		public QueryBuilder AddOrderByColumn(string columns) {
+		public QueryBuilder OrderBy(string columns) {
 			foreach (string col in columns.Split(','))
 				orderByColumns.Add(new SqlFragment(col.Trim()));
 			
 			return this;
 		}
-		public QueryBuilder AddOrderByColumn(SqlFragment frag) {
+		public QueryBuilder OrderBy(SqlFragment frag) {
 			orderByColumns.Add(frag);
 			
 			return this;
@@ -373,17 +394,17 @@ namespace SqlBuilder
 					sf.AppendText(" LEFT OUTER JOIN ");
 				}
 				
-				sf.AppendTextFormatted("{0} ON {1}={2}", join.table, join.column1, join.column2);
+				sf.AppendText("{0} ON {1}={2}", join.table, join.column1, join.column2);
 			}
 			
 			// The WHERE clause, if any
 			if (whereCondition != null)
 			{
-				SqlFragment whereFrag = whereCondition.ToSqlFragment();
-				if (whereFrag != null)
+				//SqlFragment whereFrag = whereCondition.ToSqlFragment();
+				if (whereCondition != null)
 				{
 					sf.AppendText(" WHERE ")
-					  .AppendFragment(whereFrag);
+					  .AppendFragment(whereCondition);
 				}
 			}
 			
@@ -422,11 +443,11 @@ namespace SqlBuilder
 			// Offset and limit
 			if (offset > 0)
 			{
-				sf.AppendTextFormatted(" OFFSET {0}", offset);
+				sf.AppendText(" OFFSET {0}", offset);
 			}
 			if (limit > 0)
 			{
-				sf.AppendTextFormatted(" LIMIT {0}", limit);
+				sf.AppendText(" LIMIT {0}", limit);
 			}
 			
 			return sf;
@@ -558,15 +579,25 @@ namespace SqlBuilder
 		#endregion
 		
 		#region Returning the results
+		/// <summary>
+		/// Execute the query and return the results in a list of type <paramref name="T"/>.
+		/// </summary>
+		/// <param name='con'>
+		/// The IDbConnection on which the query will be executed.
+		/// </param>
+		/// <typeparam name='T'>
+		/// The type of each result.
+		/// </typeparam>
 		public List<T> List<T>(IDbConnection con) where T : new() {
 			// Get the fields and properties of type T and put their setter methods in the cache, if not already there
 			IDictionary<string, SetValue> setters = ReflectionHelper.FetchSettersOf<T>();
-			
+
+			Console.WriteLine(this.ToSqlString());
+
 			// Execute the SQL command and create the list
 			List<T> results = new List<T>(10);
 			using (IDbCommand com = this.ToSqlCommand(con))
 			{
-			
 				using (IDataReader dr = com.ExecuteReader())
 				{
 					while (dr.Read())
@@ -810,18 +841,19 @@ namespace SqlBuilder
 			return (R)command.ExecuteScalar();
 		}
 		#endregion
-		
-		private void InstantiateLists() {
+
+		#region Constructors
+		private QueryBuilder()
+		{
 			selectedProjections = new List<ProjectionFragment>();
 			joinedTables = new List<JoinedTable>();
 			groupedColumns = new List<SqlFragment>();
 			orderByColumns = new List<SqlFragment>();
 		}
-		public QueryBuilder(string table)
+
+		public QueryBuilder(string table) : this()
 		{
 			this.tableOrSubquery = new FromFragment(table);
-			
-			InstantiateLists();
 		}
 		
 		/// <summary>
@@ -832,10 +864,9 @@ namespace SqlBuilder
 		/// <param name='subquery'>
 		/// The Sql Fragment that represents the subquery (everything that goes in the FROM clause)
 		/// </param>
-		public QueryBuilder(FromFragment subquery) {
+		public QueryBuilder(FromFragment subquery) : this() {
 			tableOrSubquery = subquery;
-			
-			InstantiateLists();
 		}
+		#endregion
 	}
 }

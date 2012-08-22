@@ -19,17 +19,14 @@ namespace SqlBuilder.Conditions
 		public NullCondition(string column, bool isNotNull) : base()
 		{
 			// Build the fragment
-			SqlFragment frag = new SqlFragment();
 			if (isNotNull)
 			{
-				frag.AppendText(column + " IS NOT NULL");
+				this.AppendText(column + " IS NOT NULL");
 			}
 			else
 			{
-				frag.AppendText(column + " IS NULL");
+				this.AppendText(column + " IS NULL");
 			}
-			
-			this.SetSqlFragment(frag);
 		}
 	}
 }

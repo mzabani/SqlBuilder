@@ -64,10 +64,17 @@ namespace SqlBuilder
 				yield return node;
 			}
 			
-			// Return a text node for the " AS alias" part
-			yield return new SqlNode(" AS " + alias, SqlNodeType.Text);
+			// Return a text node for the " AS alias" part, if an alias was specified
+			if (alias != null)
+				yield return new SqlNode(" AS " + alias, SqlNodeType.Text);
 		}
-		
+
+
+		public ProjectionFragment()
+		{
+
+		}
+
 		/// <summary>
 		/// Creates a projection with a name. Projections should have the same name of the properties of
 		/// the results' class or an expression, in which case you should give it an alias with the name of a valid property.

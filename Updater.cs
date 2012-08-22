@@ -51,16 +51,16 @@ namespace SqlBuilder
 				var getter = reg.chosenPropsOrFields.ElementAt(i);
 
 				if (i == reg.chosenPropsOrFields.Count - 1)
-					query.AppendTextFormatted("{0}=", getter.Key)
+					query.AppendText("{0}=", getter.Key)
 						 .AppendParameter(getter.Value(reg.obj));
 				else
-					query.AppendTextFormatted("{0}=", getter.Key)
+					query.AppendText("{0}=", getter.Key)
 						 .AppendParameter(getter.Value(reg.obj))
 						 .AppendText(",");
 			}
 
 			// WHERE id=?
-			query.AppendTextFormatted(" WHERE {0}=", reg.idColumn)
+			query.AppendText(" WHERE {0}=", reg.idColumn)
 				 .AppendParameter(reg.idGetter(reg.obj));
 
 			return query;

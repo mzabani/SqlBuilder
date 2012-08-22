@@ -31,9 +31,9 @@ namespace SqlBuilder
 				var getter = chosenPropsOrFields.ElementAt(i);
 
 				if (i == chosenPropsOrFields.Count - 1)
-					query.AppendTextFormatted("{0}=t.{0}", getter.Key);
+					query.AppendText("{0}=t.{0}", getter.Key);
 				else
-					query.AppendTextFormatted("{0}=t.{0},", getter.Key);
+					query.AppendText("{0}=t.{0},", getter.Key);
 			}
 			
 			// Values and ids section

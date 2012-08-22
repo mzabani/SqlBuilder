@@ -7,21 +7,15 @@ namespace SqlBuilder.Conditions
 	public class SimpleComparison : WhereCondition
 	{
 		public SimpleComparison(SqlFragment columnOrExpression, string @operator, object @value) {
-			SqlFragment frag = new SqlFragment();
-			frag.AppendFragment(columnOrExpression)
+			this.AppendFragment(columnOrExpression)
 				.AppendText(@operator)
 				.AppendParameter(@value);
-			
-			this.SetSqlFragment(frag);
 		}
 
 		public SimpleComparison(SqlFragment leftSideColumnOrExpression, string @operator, SqlFragment rightSideColumnOrExpression) {
-			SqlFragment frag = new SqlFragment();
-			frag.AppendFragment(leftSideColumnOrExpression)
+			this.AppendFragment(leftSideColumnOrExpression)
 				.AppendText(@operator)
 				.AppendFragment(rightSideColumnOrExpression);
-			
-			this.SetSqlFragment(frag);
 		}
 		
 		public SimpleComparison(string columnOrExpression, string @operator, object @value) : this(new SqlFragment(columnOrExpression), @operator, @value)

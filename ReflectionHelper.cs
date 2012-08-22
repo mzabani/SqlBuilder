@@ -1,6 +1,10 @@
 using System;
-using System.Reflection;
+using System.Linq;
 using System.Collections.Generic;
+
+using System.Reflection;
+
+using SqlBuilder.Types;
 
 namespace SqlBuilder.Reflection
 {
@@ -9,12 +13,26 @@ namespace SqlBuilder.Reflection
 
 	public class ReflectionHelper
 	{
+		private delegate void FieldSetValue(Object obj, Object val);
 		private delegate void PropSetValue(Object obj, Object val, Object[] index);
 		private delegate Object PropGetValue(Object obj, Object[] index);
-		private static SetValue PropValueSetterDelegate(PropSetValue propSetter) {
+		private static SetValue FieldValueSetterDelegate(FieldSetValue fieldSetter)
+		{
+			// The property/field setter function automatically converts an object returned by the DB
+			// with a possible custom IUserType
 			SetValue setValueFunc = (obj, val) => 
 				{
-					propSetter(obj, val, null);
+					fieldSetter(obj, RegisteredCustomTypes.GetObjectAfterCustomTypeConversion(val));
+				};
+			
+			return setValueFunc;
+		}
+		private static SetValue PropValueSetterDelegate(PropSetValue propSetter) {
+			// The property/field setter function automatically converts an object returned by the DB
+			// with a possible custom IUserType
+			SetValue setValueFunc = (obj, val) => 
+				{
+					propSetter(obj, RegisteredCustomTypes.GetObjectAfterCustomTypeConversion(val), null);
 				};
 			
 			return setValueFunc;
@@ -30,17 +48,20 @@ namespace SqlBuilder.Reflection
 		
 		/// <summary>
 		/// Get the publicly settable fields and propertiy setters of type T and put them the cache, if not already there.
+		/// Adds a name without a leading underscore for every field or property that possesses one, as long as a publicly settable 
+		/// property or field without the leading underscore does not exist. This way, setting value of both "_prop" or "prop"
+		/// may actually be setting the value of "_prop", if a field or property "prop" does not exist in type <paramref name="T"/>.
 		/// </summary>
 		public static IDictionary<string, SetValue> FetchSettersOf<T>() {
 			Type typeOfT = typeof(T);
-			IDictionary<string, SetValue> setters;
+
 			if (propOrFieldSetters.ContainsKey(typeOfT))
 			{
-				setters = propOrFieldSetters[typeOfT];
+				return propOrFieldSetters[typeOfT];
 			}
 			else
 			{
-				setters = new Dictionary<string, SetValue>(1);
+				IDictionary<string, SetValue> setters = new Dictionary<string, SetValue>(1);
 				propOrFieldSetters.Add(typeOfT, setters);
 				var fields = typeOfT.GetFields();
 				var props = typeOfT.GetProperties();
@@ -48,7 +69,7 @@ namespace SqlBuilder.Reflection
 				foreach (var field in fields)
 				{
 					//Console.WriteLine("Found field {0}", field.Name);
-					setters.Add(field.Name, field.SetValue);
+					setters.Add(field.Name, FieldValueSetterDelegate(field.SetValue));
 				}
 				
 				foreach (var prop in props)
@@ -64,9 +85,26 @@ namespace SqlBuilder.Reflection
 						//Console.WriteLine("Property {0} found bot not included (no public setter).", prop.Name);
 					}						
 				}
+
+				// Checks for field or properties with leading underscore without non-underscored analog.
+				IDictionary<string, SetValue> analogs = new Dictionary<string, SetValue>();
+				foreach (var setter in setters)
+				{
+					if (setter.Key[0] != '_')
+						continue;
+
+					string analogName = setter.Key.Substring(1);
+					if (setters.ContainsKey(analogName) == false)
+					{
+						analogs.Add(analogName, setter.Value);
+					}
+				}
+
+				foreach (var analogSetter in analogs)
+					setters.Add(analogSetter);
+
+				return setters;
 			}
-			
-			return setters;
 		}
 
 		/// <summary>

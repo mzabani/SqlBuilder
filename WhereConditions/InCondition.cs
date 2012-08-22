@@ -10,17 +10,15 @@ namespace SqlBuilder.Conditions
 		public InCondition(string column, IList<int> ids) : base()
 		{
 			// Build the fragment
-			SqlFragment frag = new SqlFragment();
-			frag.AppendText(column + " IN (");
+			this.AppendText(column + " IN (");
 			
 			for (int i = 0; i < ids.Count - 1; i++)
 			{
-				frag.AppendText(ids[i] + ", ");
+				this.AppendParameter(ids[i])
+					.AppendText(",");
 			}
 			
-			frag.AppendText(ids.Last() + ")");
-			
-			this.SetSqlFragment(frag);
+			this.AppendText(ids.Last() + ")");
 		}
 	}
 }

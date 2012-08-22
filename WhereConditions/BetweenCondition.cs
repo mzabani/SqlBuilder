@@ -8,23 +8,19 @@ namespace SqlBuilder.Conditions
 		public Between(string columnOrExpression, object min_val, object max_val) : base()
 		{
 			// Build the fragment
-			SqlFragment frag = new SqlFragment();
-			frag.AppendText("(" + columnOrExpression + ") BETWEEN ")
+			this.AppendText(columnOrExpression + " BETWEEN ")
 				.AppendParameter(min_val)
 				.AppendText(" AND ")
 				.AppendParameter(max_val);
-			
-			this.SetSqlFragment(frag);
 		}
 		
 		public Between(SqlFragment frag, object min_val, object max_val) : base() {
 			// Build the fragment
-			frag.AppendText(" BETWEEN ")
+			this.AppendFragment(frag)
+				.AppendText(" BETWEEN ")
 				.AppendParameter(min_val)
 				.AppendText(" AND ")
 				.AppendParameter(max_val);
-			
-			this.SetSqlFragment(frag);
 		}
 	}
 }

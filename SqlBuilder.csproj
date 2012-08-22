@@ -37,7 +37,6 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="JoinedTable.cs" />
-    <Compile Include="WhereCondition.cs" />
     <Compile Include="QueryBuilder.cs" />
     <Compile Include="WhereConditions\BetweenCondition.cs" />
     <Compile Include="WhereConditions\NotEqualTo.cs" />
@@ -46,7 +45,6 @@
     <Compile Include="WhereConditions\GreaterOrEqual.cs" />
     <Compile Include="WhereConditions\GreaterThan.cs" />
     <Compile Include="SqlFragments\SqlNode.cs" />
-    <Compile Include="SqlFragments\SqlFragment.cs" />
     <Compile Include="SqlFragments\ProjectionFragment.cs" />
     <Compile Include="SqlFragments\FromFragment.cs" />
     <Compile Include="Types\IUserType.cs" />
@@ -59,6 +57,10 @@
     <Compile Include="Updater.cs" />
     <Compile Include="WhereConditions\LessThan.cs" />
     <Compile Include="WhereConditions\LessOrEqual.cs" />
+    <Compile Include="WhereConditions\CompositeComparison.cs" />
+    <Compile Include="SqlFragment.cs" />
+    <Compile Include="SqlFragments\WhereCondition.cs" />
+    <Compile Include="Types\RegisteredCustomTypes.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

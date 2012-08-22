@@ -1,6 +1,9 @@
 using System;
 using System.Text;
+using System.Linq;
 using System.Collections.Generic;
+
+using System.Linq.Expressions;
 
 namespace SqlBuilder
 {
@@ -9,7 +12,7 @@ namespace SqlBuilder
 	/// </summary>
 	public class SqlFragment
 	{
-		private IList<SqlNode> nodes;
+		private LinkedList<SqlNode> nodes;
 		
 		/// <summary>
 		/// Appends a node to this Sql fragment.
@@ -22,11 +25,27 @@ namespace SqlBuilder
 		/// </param>
 		private SqlFragment AppendNode(SqlNode node)
 		{
-			nodes.Add(node);
+			nodes.AddLast(node);
 			
 			return this;
 		}
-		
+
+		/// <summary>
+		/// Prepends a node to this Sql fragment.
+		/// </summary>
+		/// <returns>
+		/// This fragment.
+		/// </returns>
+		/// <param name='node'>
+		/// The Sql Node to be prepended.
+		/// </param>
+		private SqlFragment PrependNode(SqlNode node)
+		{
+			nodes.AddFirst(node);
+			
+			return this;
+		}
+
 		/// <summary>
 		/// Appends a text node (no parameters here) to this Sql fragment.
 		/// </summary>
@@ -37,10 +56,20 @@ namespace SqlBuilder
 		/// The text to be appended as a text Sql Node.
 		/// </param>
 		public SqlFragment AppendText(string text) {
-			SqlNode textNode = new SqlNode(text, SqlNodeType.Text);
-			nodes.Add(textNode);
-			
-			return this;
+			return AppendNode(new SqlNode(text, SqlNodeType.Text));
+		}
+
+		/// <summary>
+		/// Prepends a text node (no parameters here) to this Sql fragment.
+		/// </summary>
+		/// <returns>
+		/// This fragment.
+		/// </returns>
+		/// <param name='text'>
+		/// The text to be prepende as a text Sql Node.
+		/// </param>
+		public SqlFragment PrependText(string text) {
+			return PrependNode(new SqlNode(text, SqlNodeType.Text));
 		}
 
 		/// <summary>
@@ -55,11 +84,24 @@ namespace SqlBuilder
 		/// <param name='args'>
 		/// The arguments passed to String.Format to create the text to be appended to the node.
 		/// </param>
-		public SqlFragment AppendTextFormatted(string text, params object[] args) {
-			SqlNode textNode = new SqlNode(String.Format(text, args), SqlNodeType.Text);
-			nodes.Add(textNode);
-			
-			return this;
+		public SqlFragment AppendText(string text, params object[] args) {
+			return AppendNode(new SqlNode(String.Format(text, args), SqlNodeType.Text));
+		}
+
+		/// <summary>
+		/// Prepends a formatted text node (no parameters here) to this Sql fragment.
+		/// </summary>
+		/// <returns>
+		/// This fragment.
+		/// </returns>
+		/// <param name='text'>
+		/// The text to be prepended as a text Sql Node.
+		/// </param>
+		/// <param name='args'>
+		/// The arguments passed to String.Format.
+		/// </param>
+		public SqlFragment PrependText(string text, params object[] args) {
+			return PrependNode(new SqlNode(String.Format(text, args), SqlNodeType.Text));
 		}
 		
 		/// <summary>
@@ -72,12 +114,22 @@ namespace SqlBuilder
 		/// The parameter to be appended as a Sql Node.
 		/// </param>
 		public SqlFragment AppendParameter(object param) {
-			SqlNode textNode = new SqlNode(param);
-			nodes.Add(textNode);
-			
-			return this;
+			return AppendNode(new SqlNode(param));
 		}
-		
+
+		/// <summary>
+		/// Prepends a parameter node to this Sql fragment.
+		/// </summary>
+		/// <returns>
+		/// This fragment.
+		/// </returns>
+		/// <param name='text'>
+		/// The parameter to be prepended as a Sql Node.
+		/// </param>
+		public SqlFragment PrependParameter(object param) {
+			return PrependNode(new SqlNode(param));
+		}
+
 		/// <summary>
 		/// Appends all the virtual nodes in fragment <paramref name="frag"/> to this fragment.
 		/// </summary>
@@ -92,7 +144,22 @@ namespace SqlBuilder
 			
 			return this;
 		}
-		
+
+		/// <summary>
+		/// Prepends all the virtual nodes in fragment <paramref name="frag"/> to this fragment.
+		/// </summary>
+		/// <param name='frag'>
+		/// The Sql Fragment whose nodes are to be prepended to this fragment.
+		/// </param>
+		public SqlFragment PrependFragment(SqlFragment frag) {
+			foreach (SqlNode node in frag.GetNodes())
+			{
+				this.PrependNode(node);
+			}
+			
+			return this;
+		}
+
 		/// <summary>
 		/// Renders this SQL fragment.
 		/// </summary>
@@ -148,15 +215,36 @@ namespace SqlBuilder
 				}
 			}
 		}
-		
+
+		#region Constructors
 		public SqlFragment()
 		{
-			nodes = new List<SqlNode>(1);
+			nodes = new LinkedList<SqlNode>();
 		}
 		
-		public SqlFragment(string textFragment) {
-			nodes = new List<SqlNode>(1);
+		public SqlFragment(string textFragment) : this() {
 			this.AppendText(textFragment);
 		}
+
+		public SqlFragment(SqlFragment sqlFragment) : this() {
+			this.AppendFragment(sqlFragment);
+		}
+		#endregion
+	}
+
+	public class SqlFragment<T> : SqlFragment
+		where T : new()
+	{
+		/// <summary>
+		/// Creates a SqlFragment with the type's field/property's name.
+		/// </summary>
+		/// <param name='lambdaGetterExpr'>
+		/// A lambda expression that returns the desired property or field.
+		/// </param>
+		public SqlFragment(Expression<Func<T, object>> lambdaGetterExpr)
+			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetterExpr))
+		{
+		}
+
 	}
 }
