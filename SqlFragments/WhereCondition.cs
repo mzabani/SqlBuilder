@@ -28,12 +28,6 @@ namespace SqlBuilder
 
 			hasCondition = true;
 
-			/*if (condition != null)
-				TransformStrConditionToInnerCondition();
-
-			innerConditions.Add(andCondition);
-			innerConditionsLinks.Add(WhereConditionType.And);*/
-			
 			return this;
 		}
 		public WhereCondition And(SqlFragment andCondition) {
@@ -42,7 +36,7 @@ namespace SqlBuilder
 		
 		public WhereCondition Or(WhereCondition orCondition) {
 			if (hasCondition)
-				this.AppendText("OR  ");
+				this.AppendText("OR ");
 
 			this.AppendText("(")
 				.AppendFragment(orCondition)

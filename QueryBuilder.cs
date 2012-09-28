@@ -592,8 +592,6 @@ namespace SqlBuilder
 			// Get the fields and properties of type T and put their setter methods in the cache, if not already there
 			IDictionary<string, SetValue> setters = ReflectionHelper.FetchSettersOf<T>();
 
-			Console.WriteLine(this.ToSqlString());
-
 			// Execute the SQL command and create the list
 			List<T> results = new List<T>(10);
 			using (IDbCommand com = this.ToSqlCommand(con))
@@ -620,6 +618,7 @@ namespace SqlBuilder
 							catch (KeyNotFoundException)
 							{
 								//Console.WriteLine("Property named {0} not defined in {1}", propertyName, typeof(T).ToString());
+								i++;
 								continue;
 							}
 							catch (IndexOutOfRangeException)
