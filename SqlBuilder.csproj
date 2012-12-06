@@ -38,13 +38,11 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="JoinedTable.cs" />
     <Compile Include="QueryBuilder.cs" />
-    <Compile Include="WhereConditions\BetweenCondition.cs" />
     <Compile Include="WhereConditions\NotEqualTo.cs" />
     <Compile Include="WhereConditions\SimpleComparison.cs" />
     <Compile Include="WhereConditions\EqualTo.cs" />
     <Compile Include="WhereConditions\GreaterOrEqual.cs" />
     <Compile Include="WhereConditions\GreaterThan.cs" />
-    <Compile Include="SqlFragments\SqlNode.cs" />
     <Compile Include="SqlFragments\ProjectionFragment.cs" />
     <Compile Include="SqlFragments\FromFragment.cs" />
     <Compile Include="Types\IUserType.cs" />
@@ -61,6 +59,15 @@
     <Compile Include="SqlFragment.cs" />
     <Compile Include="SqlFragments\WhereCondition.cs" />
     <Compile Include="Types\RegisteredCustomTypes.cs" />
+    <Compile Include="WhereConditions\Between.cs" />
+    <Compile Include="SqlNode.cs" />
+    <Compile Include="Postgres\FullText\TsQuery.cs" />
+    <Compile Include="Postgres\FullText\Matches.cs" />
+    <Compile Include="Postgres\FullText\TsRank.cs" />
+    <Compile Include="Postgres\FullText\TsVector.cs" />
+    <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="WhereConditions\LikeCondition.cs" />
+    <Compile Include="WhereConditions\Cond.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -68,5 +75,6 @@
     <Folder Include="SqlFragments\" />
     <Folder Include="Types\" />
     <Folder Include="ExpressionUtils\" />
+    <Folder Include="Postgres\FullText\" />
   </ItemGroup>
 </Project>

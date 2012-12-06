@@ -49,8 +49,8 @@ namespace SqlBuilder
 		/// <returns>
 		/// The appropriate SQL fragment.
 		/// </returns>
-		public override string ToSqlString(int initialParameterIndex, IDictionary<string, object> parameters) {
-			string frag = base.ToSqlString(initialParameterIndex, parameters);
+		public override string ToSqlString(int initialParameterIndex, IDictionary<string, object> parameters, IDictionary<object, int> parametersIdx) {
+			string frag = base.ToSqlString(initialParameterIndex, parameters, parametersIdx);
 			if (alias == null)
 				return frag;
 			

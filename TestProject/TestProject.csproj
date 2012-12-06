@@ -31,7 +31,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Npgsql">
-      <HintPath>..\..\Npgsql2.0.11.92-bin-mono2.0\Mono2.0\bin\Npgsql.dll</HintPath>
+      <HintPath>..\..\Npgsql2.0.12.0-bin-ms.net4.0\Npgsql.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

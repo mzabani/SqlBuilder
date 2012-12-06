@@ -1,4 +1,5 @@
 using System;
+using System.Linq.Expressions;
 
 namespace SqlBuilder.Conditions
 {
@@ -8,9 +9,16 @@ namespace SqlBuilder.Conditions
 		{
 		}
 
-		public EqualTo(string leftSideColumnOrExpression, string rightSideColumnOrExpression) : base(leftSideColumnOrExpression, "=", rightSideColumnOrExpression)
+		public EqualTo(string leftSideColumnOrExpression, SqlFragment rightSideColumnOrExpression) : base(leftSideColumnOrExpression, "=", rightSideColumnOrExpression)
+		{
+		}
+	}
+
+	public class EqualTo<T> : EqualTo
+	{
+		public EqualTo(Expression<Func<T, object>> lambdaGetter, object @value)
+			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), value)
 		{
 		}
 	}
 }
-

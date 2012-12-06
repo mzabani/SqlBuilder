@@ -1,7 +1,5 @@
 using System;
-using SqlBuilder;
-using System.Linq;
-using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace SqlBuilder.Conditions
 {
@@ -16,17 +14,30 @@ namespace SqlBuilder.Conditions
 		/// <param name='isNotNull'>
 		/// If set to true, creates a IS NOT NULL condition, otherwise it creates a IS NULL condition.
 		/// </param>
-		public NullCondition(string column, bool isNotNull) : base()
+		public NullCondition(SqlFragment columnOrExpr, bool isNotNull) : base()
 		{
 			// Build the fragment
 			if (isNotNull)
 			{
-				this.AppendText(column + " IS NOT NULL");
+				this.AppendFragment(columnOrExpr).AppendText(" IS NOT NULL");
 			}
 			else
 			{
-				this.AppendText(column + " IS NULL");
+				this.AppendFragment(columnOrExpr).AppendText(" IS NULL");
 			}
+		}
+
+		public NullCondition(string columnOrExpr, bool isNotNull)
+			: this(columnOrExpr.ToSqlFragment(), isNotNull)
+		{
+		}
+	}
+
+	public class NullCondition<T> : NullCondition
+	{
+		public NullCondition(Expression<Func<T, object>> lambdaGetter, bool isNotNull)
+			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), isNotNull)
+		{
 		}
 	}
 }

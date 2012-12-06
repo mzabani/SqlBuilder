@@ -8,21 +8,23 @@ namespace SqlBuilder.Conditions
 	{
 		public SimpleComparison(SqlFragment columnOrExpression, string @operator, object @value) {
 			this.AppendFragment(columnOrExpression)
-				.AppendText(@operator)
+				.AppendText(" " + @operator + " ")
 				.AppendParameter(@value);
 		}
 
 		public SimpleComparison(SqlFragment leftSideColumnOrExpression, string @operator, SqlFragment rightSideColumnOrExpression) {
 			this.AppendFragment(leftSideColumnOrExpression)
-				.AppendText(@operator)
+				.AppendText(" " + @operator + " ")
 				.AppendFragment(rightSideColumnOrExpression);
 		}
-		
-		public SimpleComparison(string columnOrExpression, string @operator, object @value) : this(new SqlFragment(columnOrExpression), @operator, @value)
+
+		public SimpleComparison(string leftSideColumnOrExpression, string @operator, SqlFragment rightSideColumnOrExpression)
+			: this(new SqlFragment(leftSideColumnOrExpression), @operator, rightSideColumnOrExpression)
 		{
 		}
-
-		public SimpleComparison(string leftSideColumnOrExpression, string @operator, string rightSideColumnOrExpression) : this(new SqlFragment(leftSideColumnOrExpression), @operator, new SqlFragment(rightSideColumnOrExpression))
+		
+		public SimpleComparison(string columnOrExpression, string @operator, object @value)
+			: this(new SqlFragment(columnOrExpression), @operator, @value)
 		{
 		}
 	}

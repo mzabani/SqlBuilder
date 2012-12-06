@@ -74,6 +74,7 @@ namespace SqlBuilder
 
 			// Creating the command and the parameters
 			IDictionary<string, object> parameters = new Dictionary<string, object>(regs.Count * 2);
+			IDictionary<object, int> parametersIdx = new Dictionary<object, int>(regs.Count * 2);
 
 			// The StringBuilder with all the UPDATE statements
 			System.Text.StringBuilder sb = new System.Text.StringBuilder();
@@ -83,7 +84,7 @@ namespace SqlBuilder
 				foreach (ObjectAndColumns reg in regs)
 				{
 					SqlFragment frag = CreateUpdateStatement(reg);
-					sb.Append(frag.ToSqlString(parameters.Count, parameters) + ";");
+					sb.Append(frag.ToSqlString(parameters.Count, parameters, parametersIdx) + ";");
 				}
 
 				// Defines the command text, composed of all the updates

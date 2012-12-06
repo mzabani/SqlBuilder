@@ -69,10 +69,11 @@ namespace SqlBuilder
 
 			// Creating the command and the parameters
 			IDictionary<string, object> parameters = new Dictionary<string, object>(regs.Count * (chosenPropsOrFields.Count + 1));
+			IDictionary<object, int> parametersIdx = new Dictionary<object, int>(regs.Count * (chosenPropsOrFields.Count + 1));
 
 			using (IDbCommand com = con.CreateCommand())
 			{
-				com.CommandText = query.ToSqlString(0, parameters);
+				com.CommandText = query.ToSqlString(0, parameters, parametersIdx);
 
 				foreach (var param in parameters)
 				{

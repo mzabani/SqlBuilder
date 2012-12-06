@@ -1,4 +1,5 @@
 using System;
+using System.Linq.Expressions;
 
 namespace SqlBuilder.Conditions
 {
@@ -8,7 +9,15 @@ namespace SqlBuilder.Conditions
 		{
 		}
 
-		public LessOrEqual(string leftSideColumnOrExpression, string rightSideColumnOrExpression) : base(leftSideColumnOrExpression, "<=", rightSideColumnOrExpression)
+		public LessOrEqual(string leftSideColumnOrExpression, SqlFragment rightSideColumnOrExpression) : base(leftSideColumnOrExpression, "<=", rightSideColumnOrExpression)
+		{
+		}
+	}
+
+	public class LessOrEqual<T> : LessOrEqual
+	{
+		public LessOrEqual(Expression<Func<T, object>> lambdaGetter, object @value)
+			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), @value)
 		{
 		}
 	}

@@ -1,10 +1,10 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="QueryBuilder.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="TestProject/Main.cs">
     <Files>
-      <File FileName="TestProject/Main.cs" Line="12" Column="15" />
-      <File FileName="QueryBuilder.cs" Line="15" Column="3" />
-      <File FileName="TestProject/PlaceEditionAndVoters.cs" Line="5" Column="2" />
+      <File FileName="TestProject/Main.cs" Line="68" Column="79" />
+      <File FileName="WhereConditions/Cond.cs" Line="115" Column="37" />
+      <File FileName="WhereConditions/LikeCondition.cs" Line="14" Column="3" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">

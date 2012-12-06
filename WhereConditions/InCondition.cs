@@ -1,24 +1,46 @@
 using System;
 using SqlBuilder;
 using System.Linq;
-using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Collections;
 
 namespace SqlBuilder.Conditions
 {
 	public class InCondition : WhereCondition
 	{
-		public InCondition(string column, IList<int> ids) : base()
+		public InCondition(SqlFragment columnOrExpr, IList values) : base()
 		{
 			// Build the fragment
-			this.AppendText(column + " IN (");
-			
-			for (int i = 0; i < ids.Count - 1; i++)
+			this.AppendFragment(columnOrExpr).AppendText(" IN (");
+
+			int i;
+			for (i = 0; i < values.Count - 1; i++)
 			{
-				this.AppendParameter(ids[i])
-					.AppendText(",");
+				if (values[i] == null)
+				{
+					this.AppendText("NULL,");
+				}
+				else
+				{
+					this.AppendParameter(values[i])
+						.AppendText(",");
+				}
 			}
-			
-			this.AppendText(ids.Last() + ")");
+
+			this.AppendParameter(values[i]).AppendText(")");
+		}
+
+		public InCondition(string columnOrExpr, IList values)
+			: this(columnOrExpr.ToSqlFragment(), values)
+		{
+		}
+	}
+
+	public class InCondition<T> : InCondition
+	{
+		public InCondition(Expression<Func<T, object>> lambdaGetter, IList values)
+			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), values)
+		{
 		}
 	}
 }

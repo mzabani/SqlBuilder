@@ -172,30 +172,43 @@ namespace SqlBuilder
 		/// <returns>
 		/// The appropriate SQL fragment.
 		/// </returns>
-		public virtual string ToSqlString(int initialParameterIndex, IDictionary<string, object> parameters) {
+		public virtual string ToSqlString(int initialParameterIndex, IDictionary<string, object> parameters, IDictionary<object, int> parametersIdx) {
 			StringBuilder sb = new StringBuilder(10);
 			
 			int parameterIndex = initialParameterIndex;
 			foreach (SqlNode node in nodes)
 			{
-				object parameterValue = null;
-				sb.Append(node.ToSqlString(parameterIndex, out parameterValue)).Append(" ");
-				
-				// Only increase the parameter index if the node was a parameter node
-				// In this case, add it to the parameters dictionary
-				if (parameterValue != null)
+				object paramValue = node.GetParameter();
+
+				// If this is a parameter node, check that it has not been added to the parameters dictionary already
+				if (paramValue != null)
 				{
-					parameters.Add("p" + parameterIndex, parameterValue);
-					parameterIndex++;
+					if (parametersIdx.ContainsKey(paramValue))
+					{
+						int paramIdx = parametersIdx[paramValue];
+						sb.Append(":p" + paramIdx).Append(" ");
+					}
+					else
+					{
+						string paramName = ":p" + parameterIndex;
+						parametersIdx.Add(paramValue, parameterIndex);
+						parameters.Add(paramName, paramValue);
+						sb.Append(paramName).Append(" ");
+						parameterIndex++;
+					}
 				}
-					
+				else
+				{
+					sb.Append(node.GetText());
+				}
 			}
 			
-			return sb.Remove(sb.Length - 1, 1).ToString();
+			return sb.ToString();
 		}
 		protected string ToSqlString() {
 			IDictionary<string, object> trash = new Dictionary<string, object>();
-			return this.ToSqlString(0, trash);
+			IDictionary<object, int> trash2 = new Dictionary<object, int>();
+			return this.ToSqlString(0, trash, trash2);
 		}
 		
 		/// <summary>

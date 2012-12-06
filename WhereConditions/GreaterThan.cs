@@ -1,4 +1,5 @@
 using System;
+using System.Linq.Expressions;
 
 namespace SqlBuilder.Conditions
 {
@@ -8,7 +9,15 @@ namespace SqlBuilder.Conditions
 		{
 		}
 
-		public GreaterThan(string leftSideColumnOrExpression, string rightSideColumnOrExpression) : base(leftSideColumnOrExpression, ">", rightSideColumnOrExpression)
+		public GreaterThan(string leftSideColumnOrExpression, SqlFragment rightSideColumnOrExpression) : base(leftSideColumnOrExpression, ">", rightSideColumnOrExpression)
+		{
+		}
+	}
+
+	public class GreaterThan<T> : GreaterThan
+	{
+		public GreaterThan(Expression<Func<T, object>> lambdaGetter, object @value)
+			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), @value)
 		{
 		}
 	}

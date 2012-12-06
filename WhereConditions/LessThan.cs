@@ -1,4 +1,5 @@
 using System;
+using System.Linq.Expressions;
 
 namespace SqlBuilder.Conditions
 {
@@ -12,9 +13,16 @@ namespace SqlBuilder.Conditions
 		{
 		}
 
-		public LessThan(string leftSideColumnOrExpression, string rightSideColumnOrExpression) : base(leftSideColumnOrExpression, "<", rightSideColumnOrExpression)
+		public LessThan(string leftSideColumnOrExpression, SqlFragment rightSideColumnOrExpression) : base(leftSideColumnOrExpression, "<", rightSideColumnOrExpression)
+		{
+		}
+	}
+
+	public class LessThan<T> : LessThan
+	{
+		public LessThan(Expression<Func<T, object>> lambdaGetter, object @value)
+			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), @value)
 		{
 		}
 	}
 }
-

@@ -20,11 +20,11 @@ namespace SqlBuilder
 		#region AND'ing and OR'ing
 		public WhereCondition And(WhereCondition andCondition) {
 			if (hasCondition)
-				this.AppendText("AND ");
+			{
+				this.PrependText("(").AppendText(") AND ");
+			}
 
-			this.AppendText("(")
-				.AppendFragment(andCondition)
-				.AppendText(")");
+			this.AppendFragment(andCondition);
 
 			hasCondition = true;
 
@@ -36,11 +36,11 @@ namespace SqlBuilder
 		
 		public WhereCondition Or(WhereCondition orCondition) {
 			if (hasCondition)
-				this.AppendText("OR ");
+			{
+				this.PrependText("(").AppendText(") OR ");
+			}
 
-			this.AppendText("(")
-				.AppendFragment(orCondition)
-				.AppendText(")");
+			this.AppendFragment(orCondition);
 
 			hasCondition = true;
 
@@ -63,24 +63,8 @@ namespace SqlBuilder
 		/// <returns>
 		/// The appropriate SQL WHERE clause, without the "WHERE" string.
 		/// </returns>
-		public override string ToSqlString(int initialParameterIndex, IDictionary<string, object> parameters) {
-			return "(" + base.ToSqlString(initialParameterIndex, parameters) + ")";
-
-			/*StringBuilder sb = new StringBuilder();
-			int num_params = parameters.Count;
-			sb.AppendFormat("({0})", innerConditions[0].ToSqlString(parameterIndex, parameters));
-			
-			for (int i = 0; i < innerConditionsLinks.Count; i++)
-			{
-				// Increase the parameterIndex appropriately
-				parameterIndex += parameters.Count - num_params;
-				num_params = parameters.Count;
-				
-				sb.AppendFormat(" {0} ({1})", innerConditionsLinks[i] == WhereConditionType.And ? "AND" : "OR",
-				                			  innerConditions[i + 1].ToSqlString(parameterIndex, parameters));
-			}
-			
-			return sb.ToString();*/
+		public override string ToSqlString(int initialParameterIndex, IDictionary<string, object> parameters, IDictionary<object, int> parametersIdx) {
+			return base.ToSqlString(initialParameterIndex, parameters, parametersIdx);
 		}
 
 		public WhereCondition() : base()
@@ -92,5 +76,29 @@ namespace SqlBuilder
 			this.AppendFragment(frag);
 			hasCondition = true;
 		}
+
+		#region Overloaded operators
+		public static WhereCondition operator &(WhereCondition a, WhereCondition b) {
+			WhereCondition anded = new WhereCondition(a);
+			anded.And(b);
+
+			return anded;
+		}
+
+		public static WhereCondition operator |(WhereCondition a, WhereCondition b) {
+			WhereCondition ored = new WhereCondition(a);
+			ored.Or(b);
+
+			return ored;
+		}
+
+		public static bool operator true(WhereCondition a) {
+			return false;
+		}
+
+		public static bool operator false(WhereCondition a) {
+			return false;
+		}
+		#endregion
 	}
 }

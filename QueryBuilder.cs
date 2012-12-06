@@ -460,24 +460,24 @@ namespace SqlBuilder
 		/// The sql string itself.
 		/// </returns>
 		/// <param name='parameters'>
-		/// An initialized IDictionary. Any parameters in this Sql fragment will be added to it.
+		/// An initialized IDictionary. Any parameters in this query will be added to it.
 		/// </param>
-		public string ToSqlString(IDictionary<string, object> parameters) {
+		private string ToSqlString(IDictionary<string, object> parameters, IDictionary<object, int> parametersIdx) {
 			if (selectedProjections.Count == 0)
 				throw new Exception("No SELECT columns specified");
 			
 			StringBuilder sb = new StringBuilder(150);
-			
+
 			// The SELECT clause
 			sb.Append("SELECT ");
 			foreach (SqlFragment frag in selectedProjections)
 			{
-				sb.AppendFormat("{0}, ", frag.ToSqlString(parameters.Count, parameters));
+				sb.AppendFormat("{0}, ", frag.ToSqlString(parameters.Count, parameters, parametersIdx));
 			}
 			sb.Remove(sb.Length - 2, 2);
 			
 			// The FROM clause
-			sb.AppendFormat(" FROM {0}", tableOrSubquery.ToSqlString(parameters.Count, parameters));
+			sb.AppendFormat(" FROM {0}", tableOrSubquery.ToSqlString(parameters.Count, parameters, parametersIdx));
 			
 			// The joins, if any
 			foreach (JoinedTable join in joinedTables)
@@ -498,7 +498,7 @@ namespace SqlBuilder
 			if (whereCondition != null)
 			{
 				// Append the SQL fragment and add to the parameters dictionary
-				sb.AppendFormat(" WHERE {0}", whereCondition.ToSqlString(parameters.Count, parameters));
+				sb.AppendFormat(" WHERE {0}", whereCondition.ToSqlString(parameters.Count, parameters, parametersIdx));
 			}
 			
 			// The GROUP BY clause, if any
@@ -508,7 +508,7 @@ namespace SqlBuilder
 				
 				foreach (SqlFragment proj in groupedColumns)
 				{
-					sb.AppendFormat("{0}, ", proj.ToSqlString(parameters.Count, parameters));
+					sb.AppendFormat("{0}, ", proj.ToSqlString(parameters.Count, parameters, parametersIdx));
 				}
 				sb.Remove(sb.Length - 2, 2);
 			}
@@ -520,7 +520,7 @@ namespace SqlBuilder
 				
 				foreach (SqlFragment frag in orderByColumns)
 				{
-					sb.AppendFormat(frag.ToSqlString(parameters.Count, parameters))
+					sb.AppendFormat(frag.ToSqlString(parameters.Count, parameters, parametersIdx))
 					  .Append(", ");
 				}
 				sb.Remove(sb.Length - 2, 2);
@@ -535,7 +535,7 @@ namespace SqlBuilder
 			{
 				sb.AppendFormat(" LIMIT {0}", limit);
 			}
-						
+
 			return sb.ToString();
 		}
 		
@@ -547,7 +547,8 @@ namespace SqlBuilder
 		/// </returns>
 		public string ToSqlString() {
 			IDictionary<string, object> prms = new Dictionary<string, object>();
-			string ret = ToSqlString(prms);
+			IDictionary<object, int> prmsIdx = new Dictionary<object, int>();
+			string ret = ToSqlString(prms, prmsIdx);
 			
 			ret += "\n";
 			foreach (var prm in prms)
@@ -560,7 +561,8 @@ namespace SqlBuilder
 		
 		private IDbCommand ToSqlCommand(IDbConnection con) {
 			IDictionary<string, object> parameters = new Dictionary<string, object>(10);
-			string command = this.ToSqlString(parameters);
+			IDictionary<object, int> prmsIdx = new Dictionary<object, int>(10);
+			string command = this.ToSqlString(parameters, prmsIdx);
 			
 			IDbCommand com = con.CreateCommand();
 			com.CommandText = command;
