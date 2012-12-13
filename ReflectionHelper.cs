@@ -8,31 +8,47 @@ using SqlBuilder.Types;
 
 namespace SqlBuilder.Reflection
 {
-	public delegate void SetValue(Object obj, Object val);
-	public delegate Object GetValue(Object obj);
+	internal delegate void SetValue(Object obj, Object val);
+	internal delegate Object GetValue(Object obj);
 
-	public class ReflectionHelper
+	internal class ReflectionHelper
 	{
 		private delegate void FieldSetValue(Object obj, Object val);
 		private delegate void PropSetValue(Object obj, Object val, Object[] index);
 		private delegate Object PropGetValue(Object obj, Object[] index);
-		private static SetValue FieldValueSetterDelegate(FieldSetValue fieldSetter)
+		private static SetValue FieldValueSetterDelegate(FieldSetValue fieldSetter, Type typeOfField)
 		{
 			// The property/field setter function automatically converts an object returned by the DB
 			// with a possible custom IUserType
 			SetValue setValueFunc = (obj, val) => 
 				{
-					fieldSetter(obj, RegisteredCustomTypes.GetObjectAfterCustomTypeConversion(val));
+					if (val == null)
+					{
+						fieldSetter(obj, null);
+					}
+					else
+					{
+						Type valType = val.GetType();
+						fieldSetter(obj, RegisteredCustomTypes.GetSystemObjectAfterCustomTypeConversion(val, typeOfField, valType));
+					}
 				};
 			
 			return setValueFunc;
 		}
-		private static SetValue PropValueSetterDelegate(PropSetValue propSetter) {
+		private static SetValue PropValueSetterDelegate(PropSetValue propSetter, Type typeOfProperty) {
 			// The property/field setter function automatically converts an object returned by the DB
 			// with a possible custom IUserType
 			SetValue setValueFunc = (obj, val) => 
 				{
-					propSetter(obj, RegisteredCustomTypes.GetObjectAfterCustomTypeConversion(val), null);
+					if (val == null)
+					{
+						propSetter(obj, null, null);
+					}
+					else
+					{
+						Type valType = val.GetType();
+						propSetter(obj, RegisteredCustomTypes.GetSystemObjectAfterCustomTypeConversion(val, typeOfProperty, valType), null);
+					}
 				};
 			
 			return setValueFunc;
@@ -47,7 +63,7 @@ namespace SqlBuilder.Reflection
 		private static IDictionary<Type, IDictionary<string, GetValue>> propOrFieldGetters = new Dictionary<Type, IDictionary<string, GetValue>>(5);
 		
 		/// <summary>
-		/// Get the publicly settable fields and propertiy setters of type T and put them the cache, if not already there.
+		/// Get the publicly settable fields and propertiy setters of type T and put them in a internal cache, if not already there.
 		/// Adds a name without a leading underscore for every field or property that possesses one, as long as a publicly settable 
 		/// property or field without the leading underscore does not exist. This way, setting value of both "_prop" or "prop"
 		/// may actually be setting the value of "_prop", if a field or property "prop" does not exist in type <paramref name="T"/>.
@@ -66,19 +82,19 @@ namespace SqlBuilder.Reflection
 				var fields = typeOfT.GetFields();
 				var props = typeOfT.GetProperties();
 				
-				foreach (var field in fields)
+				foreach (FieldInfo field in fields)
 				{
 					//Console.WriteLine("Found field {0}", field.Name);
-					setters.Add(field.Name, FieldValueSetterDelegate(field.SetValue));
+					setters.Add(field.Name, FieldValueSetterDelegate(field.SetValue, field.FieldType));
 				}
 				
-				foreach (var prop in props)
+				foreach (PropertyInfo prop in props)
 				{
 					MethodInfo publicSetter = prop.GetSetMethod();
 					if (publicSetter != null)
 					{
 						//Console.WriteLine("Found property {0} with public setter.", prop.Name);
-						setters.Add(prop.Name, PropValueSetterDelegate(prop.SetValue));
+						setters.Add(prop.Name, PropValueSetterDelegate(prop.SetValue, prop.PropertyType));
 					}
 					else
 					{
@@ -149,4 +165,3 @@ namespace SqlBuilder.Reflection
 		}
 	}
 }
-

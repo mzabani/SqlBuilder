@@ -8,6 +8,10 @@ namespace TestProject
 {
 	class MainClass
 	{
+		private static void SetCustomTypes() {
+			//SqlBuilder.Types.RegisteredCustomTypes.RegisterCustomType<NodaTime.ZonedDateTime, DateTime>(new ZonedDateTimeUserType());
+		}
+
 		private static NpgsqlConnection GetConnection() {
 			NpgsqlConnection con = new NpgsqlConnection("Server=localhost;Port=5432;User=application;Database=dezege");
 			con.Open();
@@ -63,27 +67,18 @@ namespace TestProject
 		{
 			using (var con = GetConnection())
 			{
-				QueryBuilder qb = new QueryBuilder("events_dates");
+				SetCustomTypes();
 
-				qb.AddColumnsOf<EvDate>("events_dates", x => x.eventdateid, x => x.title);
+				QueryBuilder qb = new QueryBuilder("events_dates_sales");
 
-				qb.Where(Cond.In<EvDate>(x => x.eventdateid, new List<int> { 1, 2, 3, 4 }));
-				qb.Where(Cond.IsNotNull<EvDate>(x => x.title));
+				qb.AddColumnsOf<EvDateSales>();
 
-				IDictionary<string, object> parameters = new Dictionary<string, object>();
-				IDictionary<object, int> parametersIdx = new Dictionary<object, int>();
+				List<EvDateSales> evdates = qb.List<EvDateSales>(con);
 
-				Console.WriteLine(qb.ToSqlString());
-
-				var tsvector = new TsVector("portuguese", "description", true);
-				var tsquery = new TsQuery("portuguese", "comida & bebida", false);
-
-				qb.Where(FullText.Match(tsvector, tsquery))
-				  .Where(Cond.NotEqualTo("title", "titulo".ToSqlFragment()));
-				qb.OrderBy(new TsRank(tsvector, tsquery));
-				qb.Where(Cond.Like("title", "%nome%"));
-
-				Console.WriteLine(qb.ToSqlString());
+				foreach (EvDateSales evdate in evdates)
+				{
+					Console.WriteLine("{0}: {1}", evdate.saleid, evdate.available_until);
+				}
 			}
 		}
 	}
