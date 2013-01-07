@@ -1,22 +1,11 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="TestProject/EvDateSales.cs">
-    <Files>
-      <File FileName="TestProject/EvDateSales.cs" Line="14" Column="1" />
-      <File FileName="TestProject/Main.cs" Line="12" Column="6" />
-      <File FileName="ReflectionHelper.cs" Line="38" Column="96" />
-      <File FileName="Types/RegisteredCustomTypes.cs" Line="56" Column="5" />
-      <File FileName="TestProject/ZonedDateTimeUserType.cs" Line="19" Column="40" />
-    </Files>
+  <MonoDevelop.Ide.Workbench>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="SqlBuilder" expanded="True">
-            <Node name="Types" expanded="True" />
-          </Node>
-          <Node name="TestProject" expanded="True" selected="True">
-            <Node name="References" expanded="True" />
-          </Node>
+          <Node name="SqlBuilder" expanded="True" />
+          <Node name="TestProject" selected="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">

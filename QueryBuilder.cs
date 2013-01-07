@@ -289,7 +289,7 @@ namespace SqlBuilder
 			}
 			else
 			{
-				whereCondition.And(andCondition);
+				whereCondition = whereCondition.And(andCondition);
 			}
 			
 			return this;
@@ -308,7 +308,7 @@ namespace SqlBuilder
 			}
 			else
 			{
-				whereCondition.Or(orCondition);
+				whereCondition = whereCondition.Or(orCondition);
 				
 				return this;
 			}
@@ -690,7 +690,8 @@ namespace SqlBuilder
 				using (IDataReader dr = com.ExecuteReader())
 				{
 					List<C> collection = null;
-					int? lastHashCode = null;
+					T lastElement = null;
+
 					while (dr.Read())
 					{
 						T temp = new T();
@@ -742,13 +743,13 @@ namespace SqlBuilder
 							}
 						}
 
-						// After building temp, check if GetHashCode has changed, in which case we create
+						// After building temp, check if temp is not equal to the last element, in which case we create
 						// a new List<C> to this new object, adding it to the results (we don't add it to results otherwise).
 						// Whether the list is new or not, we add one object of type C to this lastTempRef
-						if (temp.GetHashCode() != lastHashCode)
+						if (lastElement == null || temp.Equals(lastElement) == false)
 						{
 							results.Add(temp);
-							lastHashCode = temp.GetHashCode();
+							lastElement = temp;
 
 							collection = new List<C>();
 							setters[collectionPropOrFieldName](temp, collection);

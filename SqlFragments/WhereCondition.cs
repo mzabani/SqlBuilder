@@ -15,36 +15,41 @@ namespace SqlBuilder
 	/// </summary>
 	public class WhereCondition : SqlFragment
 	{
-		private bool hasCondition;
+		/// <summary>
+		/// Creates a copy of this condition in case you don't want to modify this.
+		/// </summary>
+		private WhereCondition CopyThisCondition() {
+			return new WhereCondition(this);
+		}
 
 		#region AND'ing and OR'ing
 		public WhereCondition And(WhereCondition andCondition) {
-			if (hasCondition)
+			WhereCondition copy = CopyThisCondition();
+
+			if (!copy.IsEmpty)
 			{
-				this.PrependText("(").AppendText(") AND ");
+				copy.PrependText("(").AppendText(") AND ");
 			}
 
-			this.AppendFragment(andCondition);
+			copy.AppendFragment(andCondition);
 
-			hasCondition = true;
-
-			return this;
+			return copy;
 		}
 		public WhereCondition And(SqlFragment andCondition) {
 			return And(new WhereCondition(andCondition));
 		}
 		
 		public WhereCondition Or(WhereCondition orCondition) {
-			if (hasCondition)
+			WhereCondition copy = CopyThisCondition();
+
+			if (!copy.IsEmpty)
 			{
-				this.PrependText("(").AppendText(") OR ");
+				copy.PrependText("(").AppendText(") OR ");
 			}
 
-			this.AppendFragment(orCondition);
+			copy.AppendFragment(orCondition);
 
-			hasCondition = true;
-
-			return this;
+			return copy;
 		}
 		public WhereCondition Or(SqlFragment orCondition) {
 			return Or(new WhereCondition(orCondition));
@@ -67,29 +72,24 @@ namespace SqlBuilder
 			return base.ToSqlString(initialParameterIndex, parameters, parametersIdx);
 		}
 
+
+		#region Constructors
 		public WhereCondition() : base()
 		{
-			hasCondition = false;
 		}
 		
 		public WhereCondition(SqlFragment frag) : this() {
-			this.AppendFragment(frag);
-			hasCondition = true;
+			base.AppendFragment(frag);
 		}
+		#endregion
 
 		#region Overloaded operators
 		public static WhereCondition operator &(WhereCondition a, WhereCondition b) {
-			WhereCondition anded = new WhereCondition(a);
-			anded.And(b);
-
-			return anded;
+			return a.And(b);
 		}
 
 		public static WhereCondition operator |(WhereCondition a, WhereCondition b) {
-			WhereCondition ored = new WhereCondition(a);
-			ored.Or(b);
-
-			return ored;
+			return a.Or(b);
 		}
 
 		public static bool operator true(WhereCondition a) {

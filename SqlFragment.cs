@@ -12,6 +12,12 @@ namespace SqlBuilder
 	/// </summary>
 	public class SqlFragment
 	{
+		public bool IsEmpty {
+			get
+			{
+				return nodes.Count == 0;
+			}
+		}
 		private LinkedList<SqlNode> nodes;
 		
 		/// <summary>
@@ -205,7 +211,7 @@ namespace SqlBuilder
 			
 			return sb.ToString();
 		}
-		protected string ToSqlString() {
+		public string ToSqlString() {
 			IDictionary<string, object> trash = new Dictionary<string, object>();
 			IDictionary<object, int> trash2 = new Dictionary<object, int>();
 			return this.ToSqlString(0, trash, trash2);
@@ -236,7 +242,11 @@ namespace SqlBuilder
 		}
 		
 		public SqlFragment(string textFragment) : this() {
-			this.AppendText(textFragment);
+			// Just to avoid possible debugging headaches in the future... avoid white space strings
+			if (String.IsNullOrWhiteSpace(textFragment) == false)
+			{
+				this.AppendText(textFragment);
+			}
 		}
 
 		public SqlFragment(SqlFragment sqlFragment) : this() {

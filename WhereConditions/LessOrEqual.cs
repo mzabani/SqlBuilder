@@ -9,6 +9,14 @@ namespace SqlBuilder.Conditions
 		{
 		}
 
+		public LessOrEqual(SqlFragment leftSideColumnOrExpression, object @value) : base(leftSideColumnOrExpression, "<=", value)
+		{
+		}
+
+		public LessOrEqual(SqlFragment leftSideColumnOrExpression, SqlFragment rightSideColumnOrExpression) : base(leftSideColumnOrExpression, "<=", rightSideColumnOrExpression)
+		{
+		}
+
 		public LessOrEqual(string leftSideColumnOrExpression, SqlFragment rightSideColumnOrExpression) : base(leftSideColumnOrExpression, "<=", rightSideColumnOrExpression)
 		{
 		}

@@ -19,6 +19,10 @@ namespace SqlBuilder
 			return new EqualTo(leftSideColumnOrExpression, rightSideColumnOrExpression);
 		}
 
+		public static EqualTo EqualTo(SqlFragment leftSideColumnOrExpression, SqlFragment rightSideColumnOrExpression) {
+			return new EqualTo(leftSideColumnOrExpression, rightSideColumnOrExpression);
+		}
+
 		public static EqualTo<T> EqualTo<T>(Expression<Func<T, object>> lambdaGetter, object @value) {
 			return new EqualTo<T>(lambdaGetter, value);
 		}
@@ -44,6 +48,14 @@ namespace SqlBuilder
 
 		public static LessThan<T> LessThan<T>(Expression<Func<T, object>> lambdaGetter, object @value) {
 			return new LessThan<T>(lambdaGetter, value);
+		}
+
+		public static LessOrEqual LessOrEqual(SqlFragment leftSideColumnOrExpression, object @value) {
+			return new LessOrEqual(leftSideColumnOrExpression, value);
+		}
+
+		public static LessOrEqual LessOrEqual(SqlFragment leftSideColumnOrExpression, SqlFragment rightSideColumnOrExpression) {
+			return new LessOrEqual(leftSideColumnOrExpression, rightSideColumnOrExpression);
 		}
 
 		public static LessOrEqual LessOrEqual(string leftSideColumnOrExpression, SqlFragment rightSideColumnOrExpression) {

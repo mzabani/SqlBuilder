@@ -9,6 +9,10 @@ namespace SqlBuilder.Conditions
 		{
 		}
 
+		public EqualTo(SqlFragment leftSideColumnOrExpression, SqlFragment rightSideColumnOrExpression) : base(leftSideColumnOrExpression, "=", rightSideColumnOrExpression)
+		{
+		}
+
 		public EqualTo(string leftSideColumnOrExpression, SqlFragment rightSideColumnOrExpression) : base(leftSideColumnOrExpression, "=", rightSideColumnOrExpression)
 		{
 		}
