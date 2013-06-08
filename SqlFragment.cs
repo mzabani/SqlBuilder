@@ -8,17 +8,17 @@ using System.Linq.Expressions;
 namespace SqlBuilder
 {
 	/// <summary>
-	/// A SqlFragment is a collection if SqlNodes. A space separated concatenation of SqlFragments form a Sql query.
+	/// A SqlFragment is either a query parameter, a string or a collection of other SqlFragments. A space separated concatenation of SqlFragments form an SQL query.
 	/// </summary>
 	public class SqlFragment
 	{
 		public bool IsEmpty {
 			get
 			{
-				return nodes.Count == 0;
+				return Nodes.Count == 0;
 			}
 		}
-		private LinkedList<SqlNode> nodes;
+		private LinkedList<SqlNode> Nodes;
 		
 		/// <summary>
 		/// Appends a node to this Sql fragment.
@@ -31,7 +31,7 @@ namespace SqlBuilder
 		/// </param>
 		private SqlFragment AppendNode(SqlNode node)
 		{
-			nodes.AddLast(node);
+			Nodes.AddLast(node);
 			
 			return this;
 		}
@@ -47,7 +47,7 @@ namespace SqlBuilder
 		/// </param>
 		private SqlFragment PrependNode(SqlNode node)
 		{
-			nodes.AddFirst(node);
+			Nodes.AddFirst(node);
 			
 			return this;
 		}
@@ -182,7 +182,7 @@ namespace SqlBuilder
 			StringBuilder sb = new StringBuilder(10);
 			
 			int parameterIndex = initialParameterIndex;
-			foreach (SqlNode node in nodes)
+			foreach (SqlNode node in Nodes)
 			{
 				object paramValue = node.GetParameter();
 
@@ -226,9 +226,9 @@ namespace SqlBuilder
 		/// The nodes.
 		/// </returns>
 		internal virtual IEnumerable<SqlNode> GetNodes() {
-			if (nodes != null)
+			if (Nodes != null)
 			{
-				foreach (SqlNode node in nodes)
+				foreach (SqlNode node in Nodes)
 				{
 					yield return node;
 				}
@@ -238,7 +238,7 @@ namespace SqlBuilder
 		#region Constructors
 		public SqlFragment()
 		{
-			nodes = new LinkedList<SqlNode>();
+			Nodes = new LinkedList<SqlNode>();
 		}
 		
 		public SqlFragment(string textFragment) : this() {
@@ -265,7 +265,7 @@ namespace SqlBuilder
 		/// A lambda expression that returns the desired property or field.
 		/// </param>
 		public SqlFragment(Expression<Func<T, object>> lambdaGetterExpr)
-			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetterExpr))
+			: base(ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr(lambdaGetterExpr))
 		{
 		}
 

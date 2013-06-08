@@ -33,7 +33,7 @@ namespace SqlBuilder.Conditions
 	public class SimpleComparison<T> : SimpleComparison
 	{
 		public SimpleComparison(Expression<Func<T, object>> lambdaGetter, string @operator, object @value)
-			: base(new SqlFragment(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr<T>(lambdaGetter)),
+			: base(new SqlFragment(ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr<T>(lambdaGetter)),
 			       @operator,
 			       @value)
 		{

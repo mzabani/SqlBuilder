@@ -21,7 +21,7 @@ namespace SqlBuilder.Conditions
 	public class Between<T> : Between
 	{
 		public Between(Expression<Func<T, object>> lambdaGetter, object min_val, object max_val)
-			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), min_val, max_val)
+			: base(ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), min_val, max_val)
 		{
 		}
 	}

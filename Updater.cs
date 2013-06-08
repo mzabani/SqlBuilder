@@ -23,20 +23,22 @@ namespace SqlBuilder
 		private IList<ObjectAndColumns> regs;
 
 		public void Update<T>(string table, Object obj, Expression<Func<T, Object>> idGetterExpr, params Expression<Func<T, Object>>[] getterExprs) {
-			ObjectAndColumns reg = new ObjectAndColumns();
+			ObjectAndColumns reg = new ObjectAndColumns {
+				table = table,
+				chosenPropsOrFields = new Dictionary<string, GetValue>(getterExprs.Length),
+				idColumn = ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr<T>(idGetterExpr),
+				obj = obj
+			};
 
-			reg.table = table;
-			reg.chosenPropsOrFields = new Dictionary<string, GetValue>(getterExprs.Length);
 			var tempGetters = ReflectionHelper.FetchGettersOf<T>();
 
 			// Only add the ones we want
 			foreach (var getterExpr in getterExprs)
 			{
-				string propOrFieldName = ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr<T>(getterExpr);
+				string propOrFieldName = ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr<T>(getterExpr);
 				reg.chosenPropsOrFields.Add(propOrFieldName, tempGetters[propOrFieldName]);
 			}
 			// Add the id getter
-			reg.idColumn = ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr<T>(idGetterExpr);
 			reg.idGetter = tempGetters[reg.idColumn];
 
 			regs.Add(reg);

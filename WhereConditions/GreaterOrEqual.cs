@@ -17,7 +17,7 @@ namespace SqlBuilder.Conditions
 	public class GreaterOrEqual<T> : GreaterOrEqual
 	{
 		public GreaterOrEqual(Expression<Func<T, object>> lambdaGetter, object @value)
-			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), @value)
+			: base(ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), @value)
 		{
 		}
 	}

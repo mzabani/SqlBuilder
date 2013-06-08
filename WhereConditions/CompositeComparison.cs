@@ -25,7 +25,7 @@ namespace SqlBuilder.Conditions
 	public class CompositeComparison<T> : CompositeComparison
 	{
 		public CompositeComparison(Expression<Func<T, object>> lambdaGetter, string operator1, object value1, string operator2, object value2)
-			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), operator1, value1, operator2, value2)
+			: base(ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), operator1, value1, operator2, value2)
 		{
 		}
 	}

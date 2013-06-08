@@ -36,7 +36,7 @@ namespace SqlBuilder.Conditions
 	public class NullCondition<T> : NullCondition
 	{
 		public NullCondition(Expression<Func<T, object>> lambdaGetter, bool isNotNull)
-			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), isNotNull)
+			: base(ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), isNotNull)
 		{
 		}
 	}

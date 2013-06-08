@@ -39,7 +39,7 @@ namespace SqlBuilder.Conditions
 	public class InCondition<T> : InCondition
 	{
 		public InCondition(Expression<Func<T, object>> lambdaGetter, IList values)
-			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), values)
+			: base(ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), values)
 		{
 		}
 	}

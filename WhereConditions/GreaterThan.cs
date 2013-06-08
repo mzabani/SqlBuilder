@@ -17,7 +17,7 @@ namespace SqlBuilder.Conditions
 	public class GreaterThan<T> : GreaterThan
 	{
 		public GreaterThan(Expression<Func<T, object>> lambdaGetter, object @value)
-			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), @value)
+			: base(ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), @value)
 		{
 		}
 	}

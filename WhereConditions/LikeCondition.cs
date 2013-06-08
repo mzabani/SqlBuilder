@@ -9,6 +9,14 @@ namespace SqlBuilder.Conditions
 		{
 		}
 
+		public LikeCondition(SqlFragment leftSideColumnOrExpression, object @value) : base(leftSideColumnOrExpression, "LIKE", @value)
+		{
+		}
+
+		public LikeCondition(SqlFragment leftSideColumnOrExpression, SqlFragment rightSideColumnOrExpression) : base(leftSideColumnOrExpression, "LIKE", rightSideColumnOrExpression)
+		{
+		}
+
 		public LikeCondition(string leftSideColumnOrExpression, SqlFragment rightSideColumnOrExpression) : base(leftSideColumnOrExpression, "LIKE", rightSideColumnOrExpression)
 		{
 		}
@@ -17,7 +25,7 @@ namespace SqlBuilder.Conditions
 	public class LikeCondition<T> : LikeCondition
 	{
 		public LikeCondition(Expression<Func<T, object>> lambdaGetter, object @value)
-			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), value)
+			: base(ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), value)
 		{
 		}
 	}

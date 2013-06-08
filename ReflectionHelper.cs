@@ -63,10 +63,10 @@ namespace SqlBuilder.Reflection
 		private static IDictionary<Type, IDictionary<string, GetValue>> propOrFieldGetters = new Dictionary<Type, IDictionary<string, GetValue>>(5);
 		
 		/// <summary>
-		/// Get the publicly settable fields and propertiy setters of type T and put them in a internal cache, if not already there.
+		/// Get the publicly settable fields and propertiy setters of type <paramref name="T"/> and put them in a internal cache, if not already there.
 		/// Adds a name without a leading underscore for every field or property that possesses one, as long as a publicly settable 
 		/// property or field without the leading underscore does not exist. This way, setting value of both "_prop" or "prop"
-		/// may actually be setting the value of "_prop", if a field or property "prop" does not exist in type <paramref name="T"/>.
+		/// may actually be setting the value of "_prop", if a field or property "prop" does not exist in type <typeparamref name="T"/>.
 		/// </summary>
 		public static IDictionary<string, SetValue> FetchSettersOf<T>() {
 			Type typeOfT = typeof(T);
@@ -124,7 +124,7 @@ namespace SqlBuilder.Reflection
 		}
 
 		/// <summary>
-		/// Get the publicly gettable fields and propertiy getters of type T and put them the cache, if not already there.
+		/// Get the publicly gettable fields and propertiy getters of type <paramref name="T"/> and put them the cache, if not already there.
 		/// </summary>
 		public static IDictionary<string, GetValue> FetchGettersOf<T>() {
 			Type typeOfT = typeof(T);

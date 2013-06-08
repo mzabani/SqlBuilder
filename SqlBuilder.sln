@@ -5,12 +5,21 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlBuilder", "SqlBuilder.cs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject", "TestProject\TestProject.csproj", "{121D97DC-3453-413D-B0C4-936367A07865}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{11E1D144-E4FE-43E3-B60C-F2091560CB42}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
+		Default|Any CPU = Default|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{11E1D144-E4FE-43E3-B60C-F2091560CB42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11E1D144-E4FE-43E3-B60C-F2091560CB42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11E1D144-E4FE-43E3-B60C-F2091560CB42}.Default|Any CPU.ActiveCfg = Debug|Any CPU
+		{11E1D144-E4FE-43E3-B60C-F2091560CB42}.Default|Any CPU.Build.0 = Debug|Any CPU
+		{11E1D144-E4FE-43E3-B60C-F2091560CB42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11E1D144-E4FE-43E3-B60C-F2091560CB42}.Release|Any CPU.Build.0 = Release|Any CPU
 		{121D97DC-3453-413D-B0C4-936367A07865}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{121D97DC-3453-413D-B0C4-936367A07865}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{121D97DC-3453-413D-B0C4-936367A07865}.Release|Any CPU.ActiveCfg = Release|Any CPU

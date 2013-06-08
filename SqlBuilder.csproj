@@ -11,22 +11,22 @@
     <AssemblyName>SQLBuilder</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
+    <DebugSymbols>True</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>False</Optimize>
     <OutputPath>bin\Debug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
+    <ConsolePause>False</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>False</Optimize>
     <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
+    <ConsolePause>False</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -47,7 +47,6 @@
     <Compile Include="SqlFragments\FromFragment.cs" />
     <Compile Include="Types\IUserType.cs" />
     <Compile Include="SqlFragments\OrderByFragment.cs" />
-    <Compile Include="ExpressionUtils\ExpressionTreeParser.cs" />
     <Compile Include="WhereConditions\InCondition.cs" />
     <Compile Include="WhereConditions\NotNullCondition.cs" />
     <Compile Include="ReflectionHelper.cs" />
@@ -68,6 +67,9 @@
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="WhereConditions\LikeCondition.cs" />
     <Compile Include="WhereConditions\Cond.cs" />
+    <Compile Include="RootQueryBuilder.cs" />
+    <Compile Include="ExpressionUtils\ExpressionTreeHelper.cs" />
+    <Compile Include="ExpressionUtils\ExpressionTreeParser.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

@@ -8,8 +8,8 @@ namespace SqlBuilder
 	};
 	
 	/// <summary>
-	/// A SQL Node. Nodes are the fragments that form the SQL Query String when concatenated through spaces.
-	/// Nodes can either be a text fragment or a parameter.
+	/// An SQL Node. Nodes are the fragments that form the SQL Query String when concatenated.
+	/// Nodes can either be a string or a parameter.
 	/// </summary>
 	internal class SqlNode
 	{

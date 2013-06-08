@@ -8,18 +8,18 @@ namespace SqlBuilder
 	
 	class JoinedTable
 	{
-		public string table;
-		public JoinType joinType;
+		public string Table;
+		public JoinType JoinType;
 		
-		public string column1;
-		public string column2;
+		public string Column1;
+		public string Column2;
 		
 		public override int GetHashCode()
 		{
 			int hash = 0;
 		 	
-		    foreach (char c in table)
-		        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+		    foreach (char c in Table)
+		        hash = ((hash << 5) + hash) + c; // hash * 33 + c
 		 	
 		    return hash;
 		}
@@ -28,15 +28,15 @@ namespace SqlBuilder
 		{
 			// TODO: Multiple joins to the same table
 			JoinedTable b = (JoinedTable) obj;
-			return this.table == b.table;
+			return this.Table == b.Table;
 		}
 		
 		public JoinedTable(string table, string column1, string column2, JoinType joinType)
 		{
-			this.table = table;
-			this.column1 = column1;
-			this.column2 = column2;
-			this.joinType = joinType;
+			this.Table = table;
+			this.Column1 = column1;
+			this.Column2 = column2;
+			this.JoinType = joinType;
 		}
 	}
 }

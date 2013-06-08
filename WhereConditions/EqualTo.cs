@@ -21,7 +21,7 @@ namespace SqlBuilder.Conditions
 	public class EqualTo<T> : EqualTo
 	{
 		public EqualTo(Expression<Func<T, object>> lambdaGetter, object @value)
-			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), value)
+			: base(ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), value)
 		{
 		}
 	}

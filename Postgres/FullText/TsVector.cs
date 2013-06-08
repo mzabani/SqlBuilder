@@ -44,7 +44,7 @@ namespace SqlBuilder.Postgres
 		where T : class, new()
 	{
 		public TsVector(string configuration, Expression<Func<T, object>> lambdaGetterExpr) 
-			: base(configuration, ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetterExpr), true)
+			: base(configuration, ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr(lambdaGetterExpr), true)
 		{
 		}
 	}

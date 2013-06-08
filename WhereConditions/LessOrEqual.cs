@@ -25,7 +25,7 @@ namespace SqlBuilder.Conditions
 	public class LessOrEqual<T> : LessOrEqual
 	{
 		public LessOrEqual(Expression<Func<T, object>> lambdaGetter, object @value)
-			: base(ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), @value)
+			: base(ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr(lambdaGetter), @value)
 		{
 		}
 	}

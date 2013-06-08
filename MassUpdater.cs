@@ -96,11 +96,11 @@ namespace SqlBuilder
 			// Only add the ones we want
 			foreach (var getterExpr in getterExprs)
 			{
-				string propOrFieldName = ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr<T>(getterExpr);
+				string propOrFieldName = ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr<T>(getterExpr);
 				chosenPropsOrFields.Add(propOrFieldName, tempGetters[propOrFieldName]);
 			}
 			// Add the id getter
-			this.idColumn = ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr<T>(idGetterExpr);
+			this.idColumn = ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr<T>(idGetterExpr);
 			this.idGetter = chosenPropsOrFields[idColumn];
 
 			this.regs = new List<T>(50);

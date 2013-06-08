@@ -119,6 +119,10 @@ namespace SqlBuilder
 			return new LikeCondition(leftSideColumnOrExpression, match);
 		}
 
+		public static LikeCondition Like(SqlFragment leftSideColumnOrExpression, string match) {
+			return new LikeCondition(leftSideColumnOrExpression, match);
+		}
+
 		public static LikeCondition<T> Like<T>(Expression<Func<T, object>> lambdaGetter, string match) {
 			return new LikeCondition<T>(lambdaGetter, match);
 		}

@@ -79,6 +79,18 @@ namespace SqlBuilder
 		/// Creates a projection with a name. Projections should have the same name of the properties of
 		/// the results' class or an expression, in which case you should give it an alias with the name of a valid property.
 		/// </summary>
+		/// <param name='fragment'>
+		/// The textual part of the projection.
+		/// </param>
+		public ProjectionFragment(SqlFragment fragment)
+		{
+			this.AppendFragment(fragment);
+		}
+
+		/// <summary>
+		/// Creates a projection with a name. Projections should have the same name of the properties of
+		/// the results' class or an expression, in which case you should give it an alias with the name of a valid property.
+		/// </summary>
 		/// <param name='textFragment'>
 		/// The textual part of the projection.
 		/// </param>
@@ -98,6 +110,21 @@ namespace SqlBuilder
 		/// The alias of the projection (used with "AS alias")
 		/// </param>
 		public ProjectionFragment(string textFragment, string alias) : this(textFragment)
+		{
+			this.alias = alias;
+		}
+
+		/// <summary>
+		/// Creates a projection with a name. Projections should have the same name of the properties of
+		/// the results' class or an expression, in which case you should give it an alias with the name of a valid property.
+		/// </summary>
+		/// <param name='fragment'>
+		/// The textual part of the projection.
+		/// </param>
+		/// <param name='alias'>
+		/// The alias of the projection (used with "AS alias")
+		/// </param>
+		public ProjectionFragment(SqlFragment fragment, string alias) : this(fragment)
 		{
 			this.alias = alias;
 		}

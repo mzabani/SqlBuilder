@@ -121,7 +121,7 @@ namespace SqlBuilder
 			//    field and property returned in getterExprs
 			foreach (Expression<Func<T, object>> getterExpr in getterExprs)
 			{
-				string propOrFieldName = ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr<T>(getterExpr);
+				string propOrFieldName = ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr<T>(getterExpr);
 				
 				// Only if there is a public setter for this property or if the field is public
 				if (setters.ContainsKey(propOrFieldName) == false)
@@ -385,16 +385,16 @@ namespace SqlBuilder
 			// The joins, if any
 			foreach (JoinedTable join in joinedTables)
 			{
-				if (join.joinType == JoinType.InnerJoin)
+				if (join.JoinType == JoinType.InnerJoin)
 				{
 					sf.AppendText(" INNER JOIN ");
 				}
-				else if (join.joinType == JoinType.LeftOuterJoin)
+				else if (join.JoinType == JoinType.LeftOuterJoin)
 				{
 					sf.AppendText(" LEFT OUTER JOIN ");
 				}
 				
-				sf.AppendText("{0} ON {1}={2}", join.table, join.column1, join.column2);
+				sf.AppendText("{0} ON {1}={2}", join.Table, join.Column1, join.Column2);
 			}
 			
 			// The WHERE clause, if any
@@ -462,7 +462,7 @@ namespace SqlBuilder
 		/// <param name='parameters'>
 		/// An initialized IDictionary. Any parameters in this query will be added to it.
 		/// </param>
-		private string ToSqlString(IDictionary<string, object> parameters, IDictionary<object, int> parametersIdx) {
+		internal string ToSqlString(IDictionary<string, object> parameters, IDictionary<object, int> parametersIdx) {
 			if (selectedProjections.Count == 0)
 				throw new Exception("No SELECT columns specified");
 			
@@ -482,16 +482,16 @@ namespace SqlBuilder
 			// The joins, if any
 			foreach (JoinedTable join in joinedTables)
 			{
-				if (join.joinType == JoinType.InnerJoin)
+				if (join.JoinType == JoinType.InnerJoin)
 				{
 					sb.Append(" INNER JOIN ");
 				}
-				else if (join.joinType == JoinType.LeftOuterJoin)
+				else if (join.JoinType == JoinType.LeftOuterJoin)
 				{
 					sb.Append(" LEFT OUTER JOIN ");
 				}
 				
-				sb.AppendFormat("{0} ON {1}={2}", join.table, join.column1, join.column2);
+				sb.AppendFormat("{0} ON {1}={2}", join.Table, join.Column1, join.Column2);
 			}
 			
 			// The WHERE clause, if any
@@ -559,7 +559,7 @@ namespace SqlBuilder
 			return ret;
 		}
 		
-		private IDbCommand ToSqlCommand(IDbConnection con) {
+		internal IDbCommand ToSqlCommand(IDbConnection con) {
 			IDictionary<string, object> parameters = new Dictionary<string, object>(10);
 			IDictionary<object, int> prmsIdx = new Dictionary<object, int>(10);
 			string command = this.ToSqlString(parameters, prmsIdx);
@@ -664,7 +664,7 @@ namespace SqlBuilder
 			// Get ready to create instances of T only when we hit a different hashcode, while
 			// we fetch every element whose columns are in the object type "referenced" by fetchManyExpr.
 			// Before that, cache the setters of this object type
-			string collectionPropOrFieldName = ExpressionTreeParser.GetPropOrFieldNameFromLambdaExpr<T, C>(fetchManyExpr);
+			string collectionPropOrFieldName = ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr<T, C>(fetchManyExpr);
 
 			// Get the fields and properties of type T and put their setter methods in the cache, if not already there
 			IDictionary<string, SetValue> setters = ReflectionHelper.FetchSettersOf<T>();

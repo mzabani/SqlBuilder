@@ -65,6 +65,12 @@ namespace TestProject
 		
 		public static void Main (string[] args)
 		{
+			var t = new WhereConditionGeneratorTreeVisitor<SampleType>("test_table");
+			t.Visit(x => x.prop2 > 4 || x.prop1 != "" && x.prop2 == 3);
+			
+			Console.WriteLine(t.Fragment.ToSqlString());
+
+			/*
 			using (var con = GetConnection())
 			{
 				SetCustomTypes();
@@ -79,7 +85,7 @@ namespace TestProject
 				{
 					Console.WriteLine("{0}: {1}", evdate.saleid, evdate.available_until);
 				}
-			}
+			}*/
 		}
 	}
 }
