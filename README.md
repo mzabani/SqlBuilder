@@ -12,7 +12,8 @@ class Product {
   public string name;
   public string description;
   public DateTime available_since;
-}```
+}
+```
 
 Now let's fetch the results from the "products" table:
 
