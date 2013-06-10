@@ -36,7 +36,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="JoinedTable.cs" />
     <Compile Include="QueryBuilder.cs" />
     <Compile Include="WhereConditions\NotEqualTo.cs" />
     <Compile Include="WhereConditions\SimpleComparison.cs" />
@@ -59,7 +58,6 @@
     <Compile Include="SqlFragments\WhereCondition.cs" />
     <Compile Include="Types\RegisteredCustomTypes.cs" />
     <Compile Include="WhereConditions\Between.cs" />
-    <Compile Include="SqlNode.cs" />
     <Compile Include="Postgres\FullText\TsQuery.cs" />
     <Compile Include="Postgres\FullText\Matches.cs" />
     <Compile Include="Postgres\FullText\TsRank.cs" />
@@ -69,7 +67,8 @@
     <Compile Include="WhereConditions\Cond.cs" />
     <Compile Include="RootQueryBuilder.cs" />
     <Compile Include="ExpressionUtils\ExpressionTreeHelper.cs" />
-    <Compile Include="ExpressionUtils\ExpressionTreeParser.cs" />
+    <Compile Include="ExpressionUtils\WhereConditionGeneratorTreeVisitor.cs" />
+    <Compile Include="SqlFragments\JoinFragment.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

@@ -31,27 +31,12 @@ namespace SqlBuilder
 		/// <returns>
 		/// The appropriate SQL fragment.
 		/// </returns>
-		public override string ToSqlString(int initialParameterIndex, IDictionary<string, object> parameters, IDictionary<object, int> parametersIdx) {
-			string frag = base.ToSqlString(initialParameterIndex, parameters, parametersIdx);
+		public override string ToSqlString(ref int initialParameterIndex, IDictionary<string, object> parameters, IDictionary<object, int> parametersIdx) {
+			string frag = base.ToSqlString(ref initialParameterIndex, parameters, parametersIdx);
 			if (alias == null)
 				return frag;
 			
 			return "(" + frag + ") AS " + alias;
-		}
-		
-		internal override IEnumerable<SqlNode> GetNodes()
-		{
-			// Return nodes for parentheses and the aliasing (in case this is a subquery)
-			if (alias != null)
-				yield return new SqlNode("(", SqlNodeType.Text);
-			
-			foreach (SqlNode node in base.GetNodes())
-			{
-				yield return node;
-			}
-			
-			if (alias != null)
-				yield return new SqlNode(") AS " + alias, SqlNodeType.Text);
 		}
 		
 		/// <summary>

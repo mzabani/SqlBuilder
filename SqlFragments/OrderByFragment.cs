@@ -23,25 +23,13 @@ namespace SqlBuilder
 		/// <returns>
 		/// The appropriate SQL fragment.
 		/// </returns>
-		public override string ToSqlString(int initialParameterIndex, IDictionary<string, object> parameters, IDictionary<object, int> parametersIdx) {
-			string frag = base.ToSqlString(initialParameterIndex, parameters, parametersIdx);
+		public override string ToSqlString(ref int initialParameterIndex, IDictionary<string, object> parameters, IDictionary<object, int> parametersIdx) {
+			string frag = base.ToSqlString(ref initialParameterIndex, parameters, parametersIdx);
 			
 			if (orderBy == OrderBy.Desc)
 				return frag + " DESC";
 			else
 				return frag;
-		}
-		
-		internal override IEnumerable<SqlNode> GetNodes()
-		{
-			foreach (SqlNode node in base.GetNodes())
-			{
-				yield return node;
-			}
-			
-			// Return a text node for the " ASC" or " DESC" part
-			if (orderBy == OrderBy.Desc)
-				yield return new SqlNode(" DESC", SqlNodeType.Text);
 		}
 
 		/// <summary>

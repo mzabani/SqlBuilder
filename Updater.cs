@@ -83,10 +83,11 @@ namespace SqlBuilder
 
 			using (IDbCommand com = con.CreateCommand())
 			{
+				int parameterIdx = 0;
 				foreach (ObjectAndColumns reg in regs)
 				{
 					SqlFragment frag = CreateUpdateStatement(reg);
-					sb.Append(frag.ToSqlString(parameters.Count, parameters, parametersIdx) + ";");
+					sb.Append(frag.ToSqlString(ref parameterIdx, parameters, parametersIdx) + ";");
 				}
 
 				// Defines the command text, composed of all the updates

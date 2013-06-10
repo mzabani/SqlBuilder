@@ -15,41 +15,30 @@ namespace SqlBuilder
 	/// </summary>
 	public class WhereCondition : SqlFragment
 	{
-		/// <summary>
-		/// Creates a copy of this condition in case you don't want to modify this.
-		/// </summary>
-		private WhereCondition CopyThisCondition() {
-			return new WhereCondition(this);
-		}
-
 		#region AND'ing and OR'ing
 		public WhereCondition And(WhereCondition andCondition) {
-			WhereCondition copy = CopyThisCondition();
-
-			if (!copy.IsEmpty)
+			if (!this.IsEmpty)
 			{
-				copy.PrependText("(").AppendText(") AND ");
+				PrependText("(").AppendText(") AND ");
 			}
 
-			copy.AppendFragment(andCondition);
+			AppendFragment(andCondition);
 
-			return copy;
+			return this;
 		}
 		public WhereCondition And(SqlFragment andCondition) {
 			return And(new WhereCondition(andCondition));
 		}
 		
 		public WhereCondition Or(WhereCondition orCondition) {
-			WhereCondition copy = CopyThisCondition();
-
-			if (!copy.IsEmpty)
+			if (!this.IsEmpty)
 			{
-				copy.PrependText("(").AppendText(") OR ");
+				PrependText("(").AppendText(") OR ");
 			}
 
-			copy.AppendFragment(orCondition);
+			AppendFragment(orCondition);
 
-			return copy;
+			return this;
 		}
 		public WhereCondition Or(SqlFragment orCondition) {
 			return Or(new WhereCondition(orCondition));
@@ -68,10 +57,9 @@ namespace SqlBuilder
 		/// <returns>
 		/// The appropriate SQL WHERE clause, without the "WHERE" string.
 		/// </returns>
-		public override string ToSqlString(int initialParameterIndex, IDictionary<string, object> parameters, IDictionary<object, int> parametersIdx) {
-			return base.ToSqlString(initialParameterIndex, parameters, parametersIdx);
+		public override string ToSqlString(ref int initialParameterIndex, IDictionary<string, object> parameters, IDictionary<object, int> parametersIdx) {
+			return base.ToSqlString(ref initialParameterIndex, parameters, parametersIdx);
 		}
-
 
 		#region Constructors
 		public WhereCondition() : base()

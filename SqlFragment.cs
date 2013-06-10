@@ -7,206 +7,191 @@ using System.Linq.Expressions;
 
 namespace SqlBuilder
 {
+	public enum SqlFragmentType {
+		Text = 1, Parameter,
+
+		/// <summary>
+		/// A list of SqlFragments.
+		/// </summary>
+		Complex
+	};
+
 	/// <summary>
 	/// A SqlFragment is either a query parameter, a string or a collection of other SqlFragments. A space separated concatenation of SqlFragments form an SQL query.
 	/// </summary>
 	public class SqlFragment
 	{
-		public bool IsEmpty {
-			get
-			{
-				return Nodes.Count == 0;
-			}
-		}
-		private LinkedList<SqlNode> Nodes;
-		
-		/// <summary>
-		/// Appends a node to this Sql fragment.
-		/// </summary>
-		/// <returns>
-		/// This fragment.
-		/// </returns>
-		/// <param name='node'>
-		/// The Sql Node to be appended.
-		/// </param>
-		private SqlFragment AppendNode(SqlNode node)
-		{
-			Nodes.AddLast(node);
-			
-			return this;
-		}
+		public SqlFragmentType FragmentType { get; private set; }
+		public string Text { get; private set; }
+		public object Parameter { get; private set; }
+		private LinkedList<SqlFragment> Fragments;
+
+		public bool IsEmpty { get; private set; }
 
 		/// <summary>
-		/// Prepends a node to this Sql fragment.
-		/// </summary>
-		/// <returns>
-		/// This fragment.
-		/// </returns>
-		/// <param name='node'>
-		/// The Sql Node to be prepended.
-		/// </param>
-		private SqlFragment PrependNode(SqlNode node)
-		{
-			Nodes.AddFirst(node);
-			
-			return this;
-		}
-
-		/// <summary>
-		/// Appends a text node (no parameters here) to this Sql fragment.
+		/// Appends text (no query parameters here) to this Sql fragment.
 		/// </summary>
 		/// <returns>
 		/// This fragment.
 		/// </returns>
 		/// <param name='text'>
-		/// The text to be appended as a text Sql Node.
+		/// The text to be appended.
 		/// </param>
 		public SqlFragment AppendText(string text) {
-			return AppendNode(new SqlNode(text, SqlNodeType.Text));
+			return AppendFragment(new SqlFragment(text));
 		}
 
 		/// <summary>
-		/// Prepends a text node (no parameters here) to this Sql fragment.
+		/// Appends formatted text (no query parameters here) to this Sql fragment.
 		/// </summary>
 		/// <returns>
 		/// This fragment.
 		/// </returns>
 		/// <param name='text'>
-		/// The text to be prepende as a text Sql Node.
+		/// The format string and its associated values to be appended.
+		/// </param>
+		public SqlFragment AppendText(string format, params object[] prms) {
+			return AppendText(String.Format(format, prms));
+		}
+
+		/// <summary>
+		/// Prepends text (no parameters here) to this Sql fragment.
+		/// </summary>
+		/// <returns>
+		/// This fragment.
+		/// </returns>
+		/// <param name='text'>
+		/// The text to be prepended.
 		/// </param>
 		public SqlFragment PrependText(string text) {
-			return PrependNode(new SqlNode(text, SqlNodeType.Text));
+			return PrependFragment(new SqlFragment(text));
 		}
 
 		/// <summary>
-		/// Appends a formatted text node (no parameters here) to this Sql fragment.
+		/// Prepends formatted text (no query parameters here) to this Sql fragment.
 		/// </summary>
 		/// <returns>
 		/// This fragment.
 		/// </returns>
 		/// <param name='text'>
-		/// The text to be appended as a text Sql Node.
+		/// The format string and its associated values to be prepended.
 		/// </param>
-		/// <param name='args'>
-		/// The arguments passed to String.Format to create the text to be appended to the node.
-		/// </param>
-		public SqlFragment AppendText(string text, params object[] args) {
-			return AppendNode(new SqlNode(String.Format(text, args), SqlNodeType.Text));
+		public SqlFragment PrependText(string format, params object[] prms) {
+			return PrependText(String.Format(format, prms));
 		}
 
 		/// <summary>
-		/// Prepends a formatted text node (no parameters here) to this Sql fragment.
+		/// Appends a parameter to this Sql fragment.
 		/// </summary>
 		/// <returns>
 		/// This fragment.
 		/// </returns>
 		/// <param name='text'>
-		/// The text to be prepended as a text Sql Node.
-		/// </param>
-		/// <param name='args'>
-		/// The arguments passed to String.Format.
-		/// </param>
-		public SqlFragment PrependText(string text, params object[] args) {
-			return PrependNode(new SqlNode(String.Format(text, args), SqlNodeType.Text));
-		}
-		
-		/// <summary>
-		/// Appends a parameter node to this Sql fragment.
-		/// </summary>
-		/// <returns>
-		/// This fragment.
-		/// </returns>
-		/// <param name='text'>
-		/// The parameter to be appended as a Sql Node.
+		/// The parameter to be appended.
 		/// </param>
 		public SqlFragment AppendParameter(object param) {
-			return AppendNode(new SqlNode(param));
+			return AppendFragment(new SqlFragment(param, SqlFragmentType.Parameter));
 		}
 
 		/// <summary>
-		/// Prepends a parameter node to this Sql fragment.
+		/// Prepends a parameter to this Sql fragment.
 		/// </summary>
 		/// <returns>
 		/// This fragment.
 		/// </returns>
 		/// <param name='text'>
-		/// The parameter to be prepended as a Sql Node.
+		/// The parameter to be prepended.
 		/// </param>
 		public SqlFragment PrependParameter(object param) {
-			return PrependNode(new SqlNode(param));
+			return PrependFragment(new SqlFragment(param, SqlFragmentType.Parameter));
 		}
 
 		/// <summary>
-		/// Appends all the virtual nodes in fragment <paramref name="frag"/> to this fragment.
+		/// Appends the SqlFragment <paramref name="frag"/> to this fragment. The fragment to be appended is not copied, i.e. we only keep a reference, so
+		/// if the appended fragment is changed, this fragment changes too.
 		/// </summary>
 		/// <param name='frag'>
-		/// The Sql Fragment whose nodes are to be appended to this fragment.
+		/// The SqlFragment to be appended.
 		/// </param>
 		public SqlFragment AppendFragment(SqlFragment frag) {
-			foreach (SqlNode node in frag.GetNodes())
-			{
-				this.AppendNode(node);
-			}
+			if (frag == null)
+				throw new ArgumentNullException("frag");
+
+			IsEmpty = false;
+			FragmentType = SqlFragmentType.Complex;
+			Fragments.AddLast(frag);
 			
 			return this;
 		}
 
 		/// <summary>
-		/// Prepends all the virtual nodes in fragment <paramref name="frag"/> to this fragment.
+		/// Prepends the SqlFragment <paramref name="frag"/> to this fragment. The fragment to be prepended is not copied, i.e. we only keep a reference, so
+		/// if the prepended fragment is changed, this fragment changes too.
 		/// </summary>
 		/// <param name='frag'>
-		/// The Sql Fragment whose nodes are to be prepended to this fragment.
+		/// The Sql Fragment to be prepended.
 		/// </param>
 		public SqlFragment PrependFragment(SqlFragment frag) {
-			foreach (SqlNode node in frag.GetNodes())
-			{
-				this.PrependNode(node);
-			}
+			if (frag == null)
+				throw new ArgumentNullException("frag");
+
+			IsEmpty = false;
+			FragmentType = SqlFragmentType.Complex;
+			Fragments.AddFirst(frag);
 			
 			return this;
+		}
+
+		protected void BuildParameter(StringBuilder sb, ref int parameterIndex, object parameterValue, IDictionary<string, object> parameters, IDictionary<object, int> parametersIdx) {
+			if (parameterValue == null)
+				throw new ArgumentNullException("parameterValue");
+
+			if (parametersIdx.ContainsKey(parameterValue))
+			{
+				// The idx does not change, this parameter has already been added
+				int paramIdx = parametersIdx[parameterValue];
+				sb.Append(":p" + paramIdx).Append(" ");
+			}
+			else
+			{
+				// New parameter, increment index
+				string paramName = ":p" + parameterIndex;
+				parametersIdx.Add(parameterValue, parameterIndex);
+				parameters.Add(paramName, parameterValue);
+				sb.Append(paramName).Append(" ");
+				++parameterIndex;
+			}
 		}
 
 		/// <summary>
 		/// Renders this SQL fragment.
 		/// </summary>
-		/// <param name="initialParameterIndex">
-		/// The parameters added in the conditions will be the letter "p" concatenated with an index that starts with this parameter.
+		/// <param name="parameterIndex">
+		/// The parameters added in the conditions will be the letter "p" concatenated with an index that starts with this parameter. As parameters are added,
+		/// this integer is incremented accordingly.
 		/// </param>
 		/// <param name="parameters">
-		/// An initialized IDictionary. Any parameters in this Sql fragment will be added to it.
+		/// An initialized IDictionary. Any parameters in this SqlFragment will be added to it.
+		/// </param>
+		/// <param name="parametersIdx">
+		/// An initialized IDictionary. This dictionary is used to keep a relation between parameters' values and their parameter index. This way
+		/// it can avoid adding the same parameter more than once, generating prettier SQL.
 		/// </param>
 		/// <returns>
 		/// The appropriate SQL fragment.
 		/// </returns>
-		public virtual string ToSqlString(int initialParameterIndex, IDictionary<string, object> parameters, IDictionary<object, int> parametersIdx) {
+		public virtual string ToSqlString(ref int parameterIndex, IDictionary<string, object> parameters, IDictionary<object, int> parametersIdx) {
 			StringBuilder sb = new StringBuilder(10);
-			
-			int parameterIndex = initialParameterIndex;
-			foreach (SqlNode node in Nodes)
-			{
-				object paramValue = node.GetParameter();
 
-				// If this is a parameter node, check that it has not been added to the parameters dictionary already
-				if (paramValue != null)
-				{
-					if (parametersIdx.ContainsKey(paramValue))
-					{
-						int paramIdx = parametersIdx[paramValue];
-						sb.Append(":p" + paramIdx).Append(" ");
-					}
-					else
-					{
-						string paramName = ":p" + parameterIndex;
-						parametersIdx.Add(paramValue, parameterIndex);
-						parameters.Add(paramName, paramValue);
-						sb.Append(paramName).Append(" ");
-						parameterIndex++;
-					}
-				}
-				else
-				{
-					sb.Append(node.GetText());
-				}
+			// First try Text and Parameter, then the list of fragments
+			if (Text != null)
+				sb.Append(Text);
+			else if (Parameter != null)
+				BuildParameter(sb, ref parameterIndex, Parameter, parameters, parametersIdx);
+
+			foreach (SqlFragment frag in Fragments)
+			{
+				sb.Append(frag.ToSqlString(ref parameterIndex, parameters, parametersIdx));
 			}
 			
 			return sb.ToString();
@@ -214,43 +199,40 @@ namespace SqlBuilder
 		public string ToSqlString() {
 			IDictionary<string, object> trash = new Dictionary<string, object>();
 			IDictionary<object, int> trash2 = new Dictionary<object, int>();
-			return this.ToSqlString(0, trash, trash2);
-		}
-		
-		/// <summary>
-		/// Retrieves nodes that could form this fragment, in order. The nodes returned here do not have to correspond to the
-		/// actual "nodes" private list in the object. They have only to be returned such that they can form a copy of this SqlFragment.
-		/// The nodes that form a fragment, whether they exist or not, are to be called virtual nodes.
-		/// </summary>
-		/// <returns>
-		/// The nodes.
-		/// </returns>
-		internal virtual IEnumerable<SqlNode> GetNodes() {
-			if (Nodes != null)
-			{
-				foreach (SqlNode node in Nodes)
-				{
-					yield return node;
-				}
-			}
+			int count = 0;
+			return this.ToSqlString(ref count, trash, trash2);
 		}
 
 		#region Constructors
 		public SqlFragment()
 		{
-			Nodes = new LinkedList<SqlNode>();
+			IsEmpty = true;
+			Fragments = new LinkedList<SqlFragment>();
 		}
 		
 		public SqlFragment(string textFragment) : this() {
-			// Just to avoid possible debugging headaches in the future... avoid white space strings
-			if (String.IsNullOrWhiteSpace(textFragment) == false)
-			{
-				this.AppendText(textFragment);
-			}
+			if (textFragment == null)
+				throw new ArgumentNullException("A SqlFragment cannot contain null text");
+
+			IsEmpty = false;
+			FragmentType = SqlFragmentType.Text;
+			Text = textFragment;
+		}
+
+		public SqlFragment(object parameter, SqlFragmentType type) : this() {
+			if (parameter == null)
+				throw new ArgumentNullException("A query parameter cannot be null");
+			else if (type != SqlFragmentType.Parameter)
+				throw new ArgumentException("This constructor must be used to build a parameter SqlFragment. This parameter must equal SqlFragmentType.Parameter");
+
+			IsEmpty = false;
+			Parameter = parameter;
+			FragmentType = SqlBuilder.SqlFragmentType.Parameter;
 		}
 
 		public SqlFragment(SqlFragment sqlFragment) : this() {
-			this.AppendFragment(sqlFragment);
+			IsEmpty = false;
+			AppendFragment(sqlFragment);
 		}
 		#endregion
 	}

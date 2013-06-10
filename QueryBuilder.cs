@@ -215,17 +215,18 @@ namespace SqlBuilder
 		#endregion
 		
 		#region Defining joins
-		private IList<JoinedTable> joinedTables;
-		
+		private IList<SqlFragment> joinFragments;
+
 		public QueryBuilder Join(string table, string column1, string column2, JoinType joinType)
 		{
-			JoinedTable join = new JoinedTable(table, column1, column2, joinType);
+			joinFragments.Add(new JoinFragment(table, column1, column2, joinType));
 			
-			if (joinedTables.Any(x => x.Equals(join)))
-				return this;
-			
-			joinedTables.Add(join);
-			
+			return this;
+		}
+		public QueryBuilder Join(string table, SqlFragment joinCondition, JoinType joinType)
+		{
+			joinFragments.Add(new JoinFragment(table, joinCondition, joinType));
+
 			return this;
 		}
 		#endregion
@@ -289,7 +290,7 @@ namespace SqlBuilder
 			}
 			else
 			{
-				whereCondition = whereCondition.And(andCondition);
+				whereCondition.And(andCondition);
 			}
 			
 			return this;
@@ -308,7 +309,7 @@ namespace SqlBuilder
 			}
 			else
 			{
-				whereCondition = whereCondition.Or(orCondition);
+				whereCondition.Or(orCondition);
 				
 				return this;
 			}
@@ -383,24 +384,15 @@ namespace SqlBuilder
 			}
 			
 			// The joins, if any
-			foreach (JoinedTable join in joinedTables)
+			foreach (SqlFragment joinFrag in joinFragments)
 			{
-				if (join.JoinType == JoinType.InnerJoin)
-				{
-					sf.AppendText(" INNER JOIN ");
-				}
-				else if (join.JoinType == JoinType.LeftOuterJoin)
-				{
-					sf.AppendText(" LEFT OUTER JOIN ");
-				}
-				
-				sf.AppendText("{0} ON {1}={2}", join.Table, join.Column1, join.Column2);
+				sf.AppendText(" ");
+				sf.AppendFragment(joinFrag);
 			}
 			
 			// The WHERE clause, if any
 			if (whereCondition != null)
 			{
-				//SqlFragment whereFrag = whereCondition.ToSqlFragment();
 				if (whereCondition != null)
 				{
 					sf.AppendText(" WHERE ")
@@ -460,45 +452,41 @@ namespace SqlBuilder
 		/// The sql string itself.
 		/// </returns>
 		/// <param name='parameters'>
-		/// An initialized IDictionary. Any parameters in this query will be added to it.
+		/// An initialized and empty IDictionary. Any parameters in this query will be added to it.
 		/// </param>
 		internal string ToSqlString(IDictionary<string, object> parameters, IDictionary<object, int> parametersIdx) {
-			if (selectedProjections.Count == 0)
+			int parameterIdx = 0;
+			return ToSqlFragment().ToSqlString(ref parameterIdx, parameters, parametersIdx);
+
+			/*if (selectedProjections.Count == 0)
 				throw new Exception("No SELECT columns specified");
 			
 			StringBuilder sb = new StringBuilder(150);
+			int parameterIdx = 0;
 
 			// The SELECT clause
 			sb.Append("SELECT ");
 			foreach (SqlFragment frag in selectedProjections)
 			{
-				sb.AppendFormat("{0}, ", frag.ToSqlString(parameters.Count, parameters, parametersIdx));
+				sb.AppendFormat("{0}, ", frag.ToSqlString(ref parameterIdx, parameters, parametersIdx));
 			}
 			sb.Remove(sb.Length - 2, 2);
 			
 			// The FROM clause
-			sb.AppendFormat(" FROM {0}", tableOrSubquery.ToSqlString(parameters.Count, parameters, parametersIdx));
+			sb.AppendFormat(" FROM {0}", tableOrSubquery.ToSqlString(ref parameterIdx, parameters, parametersIdx));
 			
 			// The joins, if any
-			foreach (JoinedTable join in joinedTables)
+			foreach (SqlFragment joinFrag in joinFragments)
 			{
-				if (join.JoinType == JoinType.InnerJoin)
-				{
-					sb.Append(" INNER JOIN ");
-				}
-				else if (join.JoinType == JoinType.LeftOuterJoin)
-				{
-					sb.Append(" LEFT OUTER JOIN ");
-				}
-				
-				sb.AppendFormat("{0} ON {1}={2}", join.Table, join.Column1, join.Column2);
+				sb.Append(" ");
+				sb.Append(joinFrag.ToSqlString(ref parameterIdx, parameters, parametersIdx));
 			}
 			
 			// The WHERE clause, if any
 			if (whereCondition != null)
 			{
 				// Append the SQL fragment and add to the parameters dictionary
-				sb.AppendFormat(" WHERE {0}", whereCondition.ToSqlString(parameters.Count, parameters, parametersIdx));
+				sb.AppendFormat(" WHERE {0}", whereCondition.ToSqlString(ref parameterIdx, parameters, parametersIdx));
 			}
 			
 			// The GROUP BY clause, if any
@@ -508,7 +496,7 @@ namespace SqlBuilder
 				
 				foreach (SqlFragment proj in groupedColumns)
 				{
-					sb.AppendFormat("{0}, ", proj.ToSqlString(parameters.Count, parameters, parametersIdx));
+					sb.AppendFormat("{0}, ", proj.ToSqlString(ref parameterIdx, parameters, parametersIdx));
 				}
 				sb.Remove(sb.Length - 2, 2);
 			}
@@ -520,7 +508,7 @@ namespace SqlBuilder
 				
 				foreach (SqlFragment frag in orderByColumns)
 				{
-					sb.AppendFormat(frag.ToSqlString(parameters.Count, parameters, parametersIdx))
+					sb.AppendFormat(frag.ToSqlString(ref parameterIdx, parameters, parametersIdx))
 					  .Append(", ");
 				}
 				sb.Remove(sb.Length - 2, 2);
@@ -536,7 +524,7 @@ namespace SqlBuilder
 				sb.AppendFormat(" LIMIT {0}", limit);
 			}
 
-			return sb.ToString();
+			return sb.ToString();*/
 		}
 		
 		/// <summary>
@@ -848,7 +836,7 @@ namespace SqlBuilder
 		private QueryBuilder()
 		{
 			selectedProjections = new List<ProjectionFragment>();
-			joinedTables = new List<JoinedTable>();
+			joinFragments = new List<SqlFragment>();
 			groupedColumns = new List<SqlFragment>();
 			orderByColumns = new List<SqlFragment>();
 		}

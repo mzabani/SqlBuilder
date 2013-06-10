@@ -9,7 +9,7 @@ namespace TestProject
 	class MainClass
 	{
 		private static void SetCustomTypes() {
-			//SqlBuilder.Types.RegisteredCustomTypes.RegisterCustomType<NodaTime.ZonedDateTime, DateTime>(new ZonedDateTimeUserType());
+			SqlBuilder.Types.RegisteredCustomTypes.RegisterCustomType<NodaTime.ZonedDateTime, DateTime>(new ZonedDateTimeUserType());
 		}
 
 		private static NpgsqlConnection GetConnection() {
@@ -65,19 +65,28 @@ namespace TestProject
 		
 		public static void Main (string[] args)
 		{
-			var t = new WhereConditionGeneratorTreeVisitor<SampleType>("test_table");
-			t.Visit(x => x.prop2 > 4 || x.prop1 != "" && x.prop2 == 3);
-			
-			Console.WriteLine(t.Fragment.ToSqlString());
+			var rqb = new RootQueryBuilder<EvDateSales>("events_dates_sales");
+			rqb.SelectAllColumns();
+			rqb.Where(x => x.saleid > 2);
+			rqb.Join<SampleType>("sample_type", (r, j) => r.saleid > j.prop2+2 && r.saleid <= j.prop2+30, JoinType.LeftOuterJoin);
+			Console.WriteLine(rqb.ToSqlString());
 
 			/*
+			var t = new WhereConditionGeneratorTreeVisitor<SampleType>("test_table");
+			t.Visit(x => (x.prop1 != null || x.prop2 > 2) && x.prop1 == "abc");
+			
+			Console.WriteLine(t.Fragment.ToSqlString());*/
+
 			using (var con = GetConnection())
 			{
-				SetCustomTypes();
+				//SetCustomTypes();
+
 
 				QueryBuilder qb = new QueryBuilder("events_dates_sales");
 
 				qb.AddColumnsOf<EvDateSales>();
+				qb.Where(Cond.GreaterThan<EvDateSales>(x => x.saleid, 0));
+				qb.Where(Cond.GreaterThan<EvDateSales>(x => x.saleid, -1));
 
 				List<EvDateSales> evdates = qb.List<EvDateSales>(con);
 
@@ -85,7 +94,7 @@ namespace TestProject
 				{
 					Console.WriteLine("{0}: {1}", evdate.saleid, evdate.available_until);
 				}
-			}*/
+			}
 		}
 	}
 }

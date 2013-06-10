@@ -73,7 +73,8 @@ namespace SqlBuilder
 
 			using (IDbCommand com = con.CreateCommand())
 			{
-				com.CommandText = query.ToSqlString(0, parameters, parametersIdx);
+				int initialParameterIdx = 0;
+				com.CommandText = query.ToSqlString(ref initialParameterIdx, parameters, parametersIdx);
 
 				foreach (var param in parameters)
 				{

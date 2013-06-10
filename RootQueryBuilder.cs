@@ -13,7 +13,7 @@ namespace SqlBuilder
 		private Type RootEntityType;
 		private QueryBuilder Qb;
 
-		#region Queried tables and reference to them
+		#region Queried tables and references to them
 		private int QueriedTableIdx;
 		/// <summary>
 		/// All queried tables, including the root table and joined entities. We need to maintain this to reference columns from all these tables
@@ -81,7 +81,7 @@ namespace SqlBuilder
 		/// Adds every publicly-settable field or property in <paramref name="getterExprs"/> to the select list, removing any leading underscore from the name of the selected column.
 		/// </summary>
 		/// <returns>
-		/// This QueryBuilder object.
+		/// This RootQueryBuilder object.
 		/// </returns>
 		public RootQueryBuilder<T> Select(params Expression<Func<T, object>>[] getterExprs) {
 			return Select(getterExprs.AsEnumerable());
@@ -91,7 +91,7 @@ namespace SqlBuilder
 		/// Adds every publicly-settable field or property in type <typeref name="T"/> to the select list, removing any leading underscore from the name of the selected column.
 		/// </summary>
 		/// <returns>
-		/// This QueryBuilder object.
+		/// This RootQueryBuilder object.
 		/// </returns>
 		public RootQueryBuilder<T> SelectAllColumns() {
 			// 1. Go after all the public settable properties and public fields in type T
@@ -115,7 +115,11 @@ namespace SqlBuilder
 		}
 
 		public RootQueryBuilder<T> Where(Expression<Func<T, bool>> whereExp) {
-			throw new NotImplementedException();
+			var condBuilder = new WhereConditionGeneratorTreeVisitor<T>(RootTable);
+			condBuilder.Visit(whereExp);
+			WhereCondition condition = condBuilder.Fragment;
+			Qb.Where(condition);
+			return this;
 		}
 
 		/// <summary>
@@ -230,6 +234,19 @@ namespace SqlBuilder
 			string trash;
 			return Join<T, JT>(joined_table_name, rootEntityColumnGetterExpr, joinedEntityColumnGetterExpr, joinType, out trash);
 		}
+
+		public RootQueryBuilder<T> Join<JT>(string joined_table_name, Expression<Func<T, JT, bool>> joinCondition, JoinType joinType)
+		{
+			if (QueriedTables.ContainsKey(joined_table_name))
+				throw new InvalidOperationException("This table has already been queried/joined. Please use a method that allows you to join to the same table more than once.");
+
+			var conditionBuilder = new WhereConditionGeneratorTreeVisitor<T, JT>(RootTable, joined_table_name);
+			conditionBuilder.Visit(joinCondition);
+			WhereCondition condFragment = conditionBuilder.Fragment;
+			Qb.Join(joined_table_name, condFragment, joinType);
+
+			return this;
+		}
 		#endregion
 
 		#region LIMIT and OFFSET
@@ -282,7 +299,7 @@ namespace SqlBuilder
 			QueriedTableIdx = 1;
 		}
 
-		public RootQueryBuilder(string table)
+		public RootQueryBuilder(string table) : this()
 		{
 			RootEntityType = typeof(T);
 			RootTable = table;
