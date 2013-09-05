@@ -54,7 +54,7 @@ namespace SqlBuilder
 		/// </returns>
 		public RootQueryBuilder<T> Select(IEnumerable<Expression<Func<T, object>>> getterExprs) {
 			// 1. Cache all setters for type T.
-			IDictionary<string, SetValue> setters = ReflectionHelper.FetchSettersOf<T>();
+			IDictionary<string, SetValue> setters = CachedTypeData.FetchSettersOf<T>();
 			
 			// 2. Add "RootTable"."propOrFieldName" to the select list or just "propOrFieldName" if table_alias is null for every
 			//    field and property returned in getterExprs
@@ -95,7 +95,7 @@ namespace SqlBuilder
 		/// </returns>
 		public RootQueryBuilder<T> SelectAllColumns() {
 			// 1. Go after all the public settable properties and public fields in type T
-			IDictionary<string, SetValue> setters = ReflectionHelper.FetchSettersOf<T>();
+			IDictionary<string, SetValue> setters = CachedTypeData.FetchSettersOf<T>();
 			
 			// 2. Add all of them to the select list!
 			foreach (string propOrField in setters.Select(x => x.Key))
@@ -115,7 +115,8 @@ namespace SqlBuilder
 		}
 
 		public RootQueryBuilder<T> Where(Expression<Func<T, bool>> whereExp) {
-			var condBuilder = new WhereConditionGeneratorTreeVisitor<T>(RootTable);
+			var condBuilder = new WhereConditionGeneratorTreeVisitor();
+			condBuilder.AddType(RootTable, RootEntityType);
 			condBuilder.Visit(whereExp);
 			WhereCondition condition = condBuilder.Fragment;
 			Qb.Where(condition);
@@ -235,12 +236,21 @@ namespace SqlBuilder
 			return Join<T, JT>(joined_table_name, rootEntityColumnGetterExpr, joinedEntityColumnGetterExpr, joinType, out trash);
 		}
 
+		/// <summary>
+		/// Joins the table of name <paramref name="joined_table_name"/>, represented by type <typeparamref name="JT" /> to the root entity, the join condition
+		/// being expressed in <paramref name="joinCondition"/>.
+		/// </summary>
+		/// <param name="joined_table_name">The real name of the table to be joined, as it is in the database.</param>
+		/// <param name="joinType">The type of join (inner, outer etc.)</param>
+		/// <typeparam name="JT">The type that represents the newly joined table.</typeparam>
 		public RootQueryBuilder<T> Join<JT>(string joined_table_name, Expression<Func<T, JT, bool>> joinCondition, JoinType joinType)
 		{
 			if (QueriedTables.ContainsKey(joined_table_name))
 				throw new InvalidOperationException("This table has already been queried/joined. Please use a method that allows you to join to the same table more than once.");
 
-			var conditionBuilder = new WhereConditionGeneratorTreeVisitor<T, JT>(RootTable, joined_table_name);
+			var conditionBuilder = new WhereConditionGeneratorTreeVisitor();
+			conditionBuilder.AddType(RootTable, RootEntityType);
+			conditionBuilder.AddType(joined_table_name, typeof(JT));
 			conditionBuilder.Visit(joinCondition);
 			WhereCondition condFragment = conditionBuilder.Fragment;
 			Qb.Join(joined_table_name, condFragment, joinType);
@@ -299,6 +309,10 @@ namespace SqlBuilder
 			QueriedTableIdx = 1;
 		}
 
+		/// <summary>
+		/// Helps build queries agains entity <typeparamref="T" /> in strongly-typed fashion, i.e. via Expressions.
+		/// </summary>
+		/// <param name="table">The table to be queried.</param>
 		public RootQueryBuilder(string table) : this()
 		{
 			RootEntityType = typeof(T);

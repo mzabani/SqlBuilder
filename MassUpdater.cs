@@ -92,7 +92,7 @@ namespace SqlBuilder
 			this.table = table;
 
 			chosenPropsOrFields = new Dictionary<string, GetValue>(getterExprs.Length);
-			var tempGetters = ReflectionHelper.FetchGettersOf<T>();
+			var tempGetters = CachedTypeData.FetchGettersOf<T>();
 
 			// Only add the ones we want
 			foreach (var getterExpr in getterExprs)

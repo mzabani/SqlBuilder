@@ -1,9 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-
 using System.Reflection;
-
 using SqlBuilder.Types;
 
 namespace SqlBuilder.Reflection
@@ -11,7 +9,7 @@ namespace SqlBuilder.Reflection
 	internal delegate void SetValue(Object obj, Object val);
 	internal delegate Object GetValue(Object obj);
 
-	internal class ReflectionHelper
+	internal class CachedTypeData
 	{
 		private delegate void FieldSetValue(Object obj, Object val);
 		private delegate void PropSetValue(Object obj, Object val, Object[] index);
@@ -59,18 +57,41 @@ namespace SqlBuilder.Reflection
 			return getValueFunc;
 		}
 		
+		private static IDictionary<Type, IList<MemberInfo>> propOrFieldInfo = new Dictionary<Type, IList<MemberInfo>>(5);
 		private static IDictionary<Type, IDictionary<string, SetValue>> propOrFieldSetters = new Dictionary<Type, IDictionary<string, SetValue>>(5);
 		private static IDictionary<Type, IDictionary<string, GetValue>> propOrFieldGetters = new Dictionary<Type, IDictionary<string, GetValue>>(5);
-		
+
+
+		private static void RecordTypeMembersInformation(Type type, FieldInfo[] fields, PropertyInfo[] properties) {
+			if (propOrFieldInfo.ContainsKey(type))
+				return;
+
+			List<MemberInfo> members = new List<MemberInfo>(fields.Length + properties.Length);
+
+			members.AddRange(fields);
+			members.AddRange(properties);
+			propOrFieldInfo.Add(type, members);
+		}
+
+		public static IList<MemberInfo> GetMembersInfo(Type type) {
+			return propOrFieldInfo[type];
+		}
+
+		public static MemberInfo GetMemberInfo(Type type, string propOrFieldName) {
+			return propOrFieldInfo[type].First(member => member.Name == propOrFieldName);
+		}
+
+		public static MemberInfo GetMemberInfo<T>(string propOrFieldName) {
+			return GetMemberInfo(typeof(T), propOrFieldName);
+		}
+
 		/// <summary>
-		/// Get the publicly settable fields and propertiy setters of type <paramref name="T"/> and put them in a internal cache, if not already there.
+		/// Get the publicly settable fields and propertiy setters of type <paramref name="typeOfT"/> and put them in a internal cache, if not already there.
 		/// Adds a name without a leading underscore for every field or property that possesses one, as long as a publicly settable 
 		/// property or field without the leading underscore does not exist. This way, setting value of both "_prop" or "prop"
-		/// may actually be setting the value of "_prop", if a field or property "prop" does not exist in type <typeparamref name="T"/>.
+		/// may actually be setting the value of "_prop", if a field or property "prop" does not exist in type <paramref name="typeOfT"/>.
 		/// </summary>
-		public static IDictionary<string, SetValue> FetchSettersOf<T>() {
-			Type typeOfT = typeof(T);
-
+		public static IDictionary<string, SetValue> FetchSettersOf(Type typeOfT) {
 			if (propOrFieldSetters.ContainsKey(typeOfT))
 			{
 				return propOrFieldSetters[typeOfT];
@@ -81,6 +102,9 @@ namespace SqlBuilder.Reflection
 				propOrFieldSetters.Add(typeOfT, setters);
 				var fields = typeOfT.GetFields();
 				var props = typeOfT.GetProperties();
+				
+				// Record info on the type's members
+				RecordTypeMembersInformation(typeOfT, fields, props);
 				
 				foreach (FieldInfo field in fields)
 				{
@@ -101,26 +125,39 @@ namespace SqlBuilder.Reflection
 						//Console.WriteLine("Property {0} found bot not included (no public setter).", prop.Name);
 					}						
 				}
-
+				
 				// Checks for field or properties with leading underscore without non-underscored analog.
 				IDictionary<string, SetValue> analogs = new Dictionary<string, SetValue>();
 				foreach (var setter in setters)
 				{
 					if (setter.Key[0] != '_')
 						continue;
-
+					
 					string analogName = setter.Key.Substring(1);
 					if (setters.ContainsKey(analogName) == false)
 					{
 						analogs.Add(analogName, setter.Value);
 					}
 				}
-
+				
 				foreach (var analogSetter in analogs)
 					setters.Add(analogSetter);
-
+				
 				return setters;
 			}
+		}
+
+
+		/// <summary>
+		/// Get the publicly settable fields and propertiy setters of type <typeparamref name="T"/> and put them in a internal cache, if not already there.
+		/// Adds a name without a leading underscore for every field or property that possesses one, as long as a publicly settable 
+		/// property or field without the leading underscore does not exist. This way, setting value of both "_prop" or "prop"
+		/// may actually be setting the value of "_prop", if a field or property "prop" does not exist in type <typeparamref name="T"/>.
+		/// </summary>
+		public static IDictionary<string, SetValue> FetchSettersOf<T>() {
+			Type typeOfT = typeof(T);
+
+			return FetchSettersOf(typeOfT);
 		}
 
 		/// <summary>
@@ -139,6 +176,9 @@ namespace SqlBuilder.Reflection
 				propOrFieldGetters.Add(typeOfT, getters);
 				var fields = typeOfT.GetFields();
 				var props = typeOfT.GetProperties();
+
+				// Record info on the type's members
+				RecordTypeMembersInformation(typeOfT, fields, props);
 				
 				foreach (var field in fields)
 				{

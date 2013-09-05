@@ -30,7 +30,7 @@ namespace SqlBuilder
 				obj = obj
 			};
 
-			var tempGetters = ReflectionHelper.FetchGettersOf<T>();
+			var tempGetters = CachedTypeData.FetchGettersOf<T>();
 
 			// Only add the ones we want
 			foreach (var getterExpr in getterExprs)

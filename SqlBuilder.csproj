@@ -48,7 +48,6 @@
     <Compile Include="SqlFragments\OrderByFragment.cs" />
     <Compile Include="WhereConditions\InCondition.cs" />
     <Compile Include="WhereConditions\NotNullCondition.cs" />
-    <Compile Include="ReflectionHelper.cs" />
     <Compile Include="MassUpdater.cs" />
     <Compile Include="Updater.cs" />
     <Compile Include="WhereConditions\LessThan.cs" />
@@ -69,6 +68,17 @@
     <Compile Include="ExpressionUtils\ExpressionTreeHelper.cs" />
     <Compile Include="ExpressionUtils\WhereConditionGeneratorTreeVisitor.cs" />
     <Compile Include="SqlFragments\JoinFragment.cs" />
+    <Compile Include="SqlFragments\ParameterListFragment.cs" />
+    <Compile Include="Dialect.cs" />
+    <Compile Include="ExpressionUtils\SqlFragmentGeneratorTreeVisitor.cs" />
+    <Compile Include="Reflection\MemberInfoExtensions.cs" />
+    <Compile Include="ResultsFetchers\ResultsFetcher.cs" />
+    <Compile Include="ResultsFetchers\IResultsFetcher.cs" />
+    <Compile Include="ResultsFetchers\CollectionResultsFetcher.cs" />
+    <Compile Include="ResultsFetchers\ICollectionResultsFetcher.cs" />
+    <Compile Include="Reflection\CachedTypeData.cs" />
+    <Compile Include="Reflection\TypeUtils.cs" />
+    <Compile Include="ResultsFetchers\MemberSetter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -77,5 +87,7 @@
     <Folder Include="Types\" />
     <Folder Include="ExpressionUtils\" />
     <Folder Include="Postgres\FullText\" />
+    <Folder Include="Reflection\" />
+    <Folder Include="ResultsFetchers\" />
   </ItemGroup>
 </Project>

@@ -7,24 +7,29 @@ using System.Linq.Expressions;
 namespace SqlBuilder
 {
 	/// <summary>
-	/// Class that parses expression trees and generates a WhereCondition. This is part of our LINQ to SQL module.
+	/// Class that parses expression trees and generates a SqlFragment. This is part of our LINQ to SQL module.
 	/// </summary>
-	public class WhereConditionGeneratorTreeVisitor : ExpressionVisitor
+	internal class SqlFragmentGeneratorTreeVisitor : ExpressionVisitor
 	{
-		//TODO: Make this class internal
 		private IDictionary<Type, string> TableEntities;
 
 		/// <summary>
-		/// The WhereCondition generated after visiting an expression.
+		/// The SqlFragment generated after visiting an expression.
 		/// </summary>
-		public WhereCondition Fragment { get; private set; }
+		public SqlFragment Fragment { get; private set; }
 
-		public WhereConditionGeneratorTreeVisitor() : base() {
+		/// <summary>
+		/// A collection of properties and fields visited, grouped per root entity type.
+		/// </summary>
+		public IDictionary<Type, IList<MemberInfo>> VisitedTypeProperties;
+
+		public SqlFragmentGeneratorTreeVisitor() : base() {
 			Fragment = new WhereCondition();
 			TableEntities = new Dictionary<Type, string>(2);
+			VisitedTypeProperties = new Dictionary<Type, IList<MemberInfo>>();
 		}
 
-		protected WhereConditionGeneratorTreeVisitor(IDictionary<Type, string> table_entities) : this() {
+		protected SqlFragmentGeneratorTreeVisitor(IDictionary<Type, string> table_entities) : this() {
 			TableEntities = table_entities;
 		}
 
@@ -58,6 +63,7 @@ namespace SqlBuilder
 			return prefix + column;
 		}
 
+		/*
 		public Expression Visit<T1, T2>(Expression e)
 		{
 			return Visit((Expression)e);
@@ -71,13 +77,14 @@ namespace SqlBuilder
 		public Expression Visit<T1, T2>(Expression<Func<T1, T2, bool>> e)
 		{
 			return Visit((Expression)e);
-		}
+		}*/
 
 		public override Expression Visit(Expression e)
 		{
 			return base.Visit(e);
 		}
 
+		/*
 		protected virtual Expression VisitAndOr(BinaryExpression node) {
 			var leftCondition = new WhereConditionGeneratorTreeVisitor(TableEntities);
 			leftCondition.Visit(node.Left);
@@ -95,7 +102,7 @@ namespace SqlBuilder
 			}
 
 			return node;
-		}
+		}*/
 
 		protected bool IsNullValue(Expression e) {
 			return e.NodeType == ExpressionType.Constant && ((ConstantExpression)e).Value == null;
@@ -104,9 +111,10 @@ namespace SqlBuilder
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
 			// Treat ANDs and ORs especially:
+			/*
 			if (node.NodeType == ExpressionType.AndAlso || node.NodeType == ExpressionType.OrElse || node.NodeType == ExpressionType.Or) {
 				return VisitAndOr(node);
-			}
+			}*/
 
 			// Before visiting, switch expressions if the left side is Constant and null (e.g. for null == identifier)
 			if (IsNullValue(node.Left))
@@ -229,6 +237,14 @@ namespace SqlBuilder
 		protected override Expression VisitMember(MemberExpression node)
 		{
 			Fragment.AppendText(GetColumnName(node.Member.Name, node.Member.DeclaringType));
+
+			// Maintain the list of visited properties
+			if (VisitedTypeProperties.ContainsKey(node.Member.DeclaringType) == false)
+				VisitedTypeProperties.Add (node.Member.DeclaringType, new List<MemberInfo>());
+
+			VisitedTypeProperties[node.Member.DeclaringType].Add(node.Member);
+
+
 			return base.VisitMember(node);
 		}
 

@@ -61,7 +61,7 @@ namespace SqlBuilder
 		/// The type whose properties are to be aliased and fetched.
 		/// </typeparam>
 		public QueryBuilder RemoveSelectionsNotOf<T>() {			
-			IDictionary<string, SetValue> setters = ReflectionHelper.FetchSettersOf<T>();
+			IDictionary<string, SetValue> setters = CachedTypeData.FetchSettersOf<T>();
 			
 			IList<ProjectionFragment> newSelects = new List<ProjectionFragment>();
 			foreach (ProjectionFragment proj in selectedProjections)
@@ -115,7 +115,7 @@ namespace SqlBuilder
 		/// </typeparam>
 		public QueryBuilder AddColumnsOf<T>(string table_alias, IEnumerable<Expression<Func<T, object>>> getterExprs) {
 			// 1. Cache all setters for type T.
-			IDictionary<string, SetValue> setters = ReflectionHelper.FetchSettersOf<T>();
+			IDictionary<string, SetValue> setters = CachedTypeData.FetchSettersOf<T>();
 			
 			// 2. Add "table_alias"."propOrFieldName" to the select list or just "propOrFieldName" if table_alias is null for every
 			//    field and property returned in getterExprs
@@ -192,7 +192,7 @@ namespace SqlBuilder
 		/// </typeparam>
 		public QueryBuilder AddColumnsOf<T>() {
 			// 1. Go after all the public settable properties and public fields in type T
-			IDictionary<string, SetValue> setters = ReflectionHelper.FetchSettersOf<T>();
+			IDictionary<string, SetValue> setters = CachedTypeData.FetchSettersOf<T>();
 			
 			// 2. Add all of them to the select list!
 			foreach (string propOrField in setters.Select(x => x.Key))
@@ -570,7 +570,8 @@ namespace SqlBuilder
 		
 		#region Returning the results
 		/// <summary>
-		/// Execute the query and return the results in a list of type <paramref name="T"/>.
+		/// Execute the query and return the results in a list of type <paramref name="T"/>. In case there are one-to-many joined tables,
+		/// there may be duplicates of the same root entity of type <typeparamref name="T" />.
 		/// </summary>
 		/// <param name='con'>
 		/// The IDbConnection on which the query will be executed.
@@ -579,8 +580,17 @@ namespace SqlBuilder
 		/// The type of each result.
 		/// </typeparam>
 		public List<T> List<T>(IDbConnection con) where T : new() {
-			// Get the fields and properties of type T and put their setter methods in the cache, if not already there
-			IDictionary<string, SetValue> setters = ReflectionHelper.FetchSettersOf<T>();
+			// We can't do magic here. If two equally named columns from different tables are queried, the user is going to be in
+			// trouble..
+			var allProjections = selectedProjections.ToDictionary(p => p.GetName(), p => p.GetName());
+			var resultsFetcher = new ResultsFetcher<T>(allProjections);
+			using (IDbCommand com = ToSqlCommand(con))
+			{
+				return resultsFetcher.List(com);
+			}
+			/*
+			 * // Get the fields and properties of type T and put their setter methods in the cache, if not already there
+			IDictionary<string, SetValue> setters = CachedTypeData.FetchSettersOf<T>();
 
 			// Execute the SQL command and create the list
 			List<T> results = new List<T>(10);
@@ -643,19 +653,38 @@ namespace SqlBuilder
 			}
 
 			return results;
+			*/
 		}
 
-		public List<T> List<T, C>(IDbConnection con, Expression<Func<T, IList<C>>> fetchManyExpr)
+		/// <summary>
+		/// Execute the query and returns a set with the results of type <typeparamref name="T"/>. This method DOES avoid duplicates
+		/// of the root entity from being returned, no matter what kind of joins are going on, as long as GetHashCode and Equals are property implemented for <typeparamref name="T" />.
+		/// </summary>
+		/// <param name='con'>
+		/// The IDbConnection on which the query will be executed.
+		/// </param>
+		/// <typeparam name='T'>
+		/// The type of each result.
+		/// </typeparam>
+		public HashSet<T> AsSet<T>(IDbConnection con)
 			where T : class, new()
-			where C : new()
 		{
+			// We can't do magic here. If two equally named columns from different tables are queried, the user is going to be in
+			// trouble..
+			ResultsFetcher<T> resultsFetcher = new ResultsFetcher<T>(selectedProjections.ToDictionary(x => x.GetName(), x => x.GetName()));
+			using (IDbCommand com = this.ToSqlCommand(con))
+			{
+				return resultsFetcher.AsSet(com);
+			}
+
+			/*
 			// Get ready to create instances of T only when we hit a different hashcode, while
 			// we fetch every element whose columns are in the object type "referenced" by fetchManyExpr.
 			// Before that, cache the setters of this object type
 			string collectionPropOrFieldName = ExpressionTreeHelper.GetPropOrFieldNameFromLambdaExpr<T, C>(fetchManyExpr);
 
 			// Get the fields and properties of type T and put their setter methods in the cache, if not already there
-			IDictionary<string, SetValue> setters = ReflectionHelper.FetchSettersOf<T>();
+			IDictionary<string, SetValue> setters = CachedTypeData.FetchSettersOf<T>();
 			//PropertyInfo collectionProp = typeof(T).GetProperty(collectionPropOrFieldName, BindingFlags.Public);
 			//FieldInfo collectionField = typeof(T).GetField(collectionPropOrFieldName);
 			if (setters.ContainsKey(collectionPropOrFieldName) == false)
@@ -667,7 +696,7 @@ namespace SqlBuilder
 			IDictionary<string, SetValue> collectionMembersSetters = null;
 			if (typeof(C).IsClass)
 			{
-				collectionMembersSetters = ReflectionHelper.FetchSettersOf<C>();
+				collectionMembersSetters = CachedTypeData.FetchSettersOf<C>();
 			}
 			
 			// Execute the SQL command and create the list
@@ -824,6 +853,8 @@ namespace SqlBuilder
 			}
 			
 			return results;
+
+			*/
 		}
 
 		public R ScalarResult<R>(IDbConnection con) {

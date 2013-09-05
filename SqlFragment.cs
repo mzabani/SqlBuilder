@@ -150,12 +150,12 @@ namespace SqlBuilder
 			{
 				// The idx does not change, this parameter has already been added
 				int paramIdx = parametersIdx[parameterValue];
-				sb.Append(":p" + paramIdx).Append(" ");
+				sb.Append(Dialect.ParameterChar + "p" + paramIdx).Append(" ");
 			}
 			else
 			{
 				// New parameter, increment index
-				string paramName = ":p" + parameterIndex;
+				string paramName = Dialect.ParameterChar + "p" + parameterIndex;
 				parametersIdx.Add(parameterValue, parameterIndex);
 				parameters.Add(paramName, parameterValue);
 				sb.Append(paramName).Append(" ");
